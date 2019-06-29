@@ -14,6 +14,7 @@ public class RegistrationTokenRepository {
     private final NamedParameterJdbcTemplate template;
 
     //TODO: нужно ли здесь создавать dto-слой?
+    // добавить дто слой
     public void save(RegistrationTokenDomain token) {
         if (token.getToken() == null) {
             throw new InvalidTokenException();
