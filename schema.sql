@@ -17,6 +17,14 @@ CREATE TABLE authorities
     authority TEXT    NOT NULL DEFAULT 'ROLE_USER' -- ROLE_ADMIN, ROLE_DEVELOPER, ROLE_APPROVER
 );
 
+-- TODO: спросить про корректность создания таблицы
+CREATE TABLE tokens
+(
+    token        TEXT    NOT NULL PRIMARY KEY,
+    user_id      INTEGER NOT NULL REFERENCES users,
+    created_date DATE DEFAULT CURRENT_DATE
+);
+
 CREATE TABLE games
 (
     id         SERIAL PRIMARY KEY,
