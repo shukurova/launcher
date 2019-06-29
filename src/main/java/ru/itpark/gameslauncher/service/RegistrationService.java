@@ -31,7 +31,6 @@ public class RegistrationService {
                     dto.getName(),
                     dto.getUsername(),
                     passwordEncoder.encode(dto.getPassword()),
-                    //TODO: спросить про надобность данного поля
                     List.of(new SimpleGrantedAuthority("ROLE_USER")),
                     true,
                     true,
