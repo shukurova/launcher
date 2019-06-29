@@ -14,10 +14,12 @@ CREATE TABLE authorities
 (
     id        SERIAL PRIMARY KEY,
     user_id   INTEGER NOT NULL REFERENCES users,
+    -- убрать дефолтное значение
     authority TEXT    NOT NULL DEFAULT 'ROLE_USER' -- ROLE_ADMIN, ROLE_DEVELOPER, ROLE_APPROVER
 );
 
 -- TODO: спросить про корректность создания таблицы
+-- Поменять тип даты
 CREATE TABLE tokens
 (
     token        TEXT    NOT NULL PRIMARY KEY,
