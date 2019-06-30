@@ -13,15 +13,14 @@ import java.util.Map;
 public class RegistrationTokenRepository {
     private final NamedParameterJdbcTemplate template;
 
-    //TODO: нужно ли здесь создавать dto-слой?
-    // добавить дто слой
-    public void save(RegistrationTokenDomain token) {
-        if (token.getToken() == null) {
+    public void save(RegistrationTokenDomain domain) {
+        if (domain.getToken() == null) {
             throw new InvalidTokenException();
         }
 
-        template.update("INSERT INTO tokens (token, user_id) VALUES (:token, :user_id);",
-                Map.of("token", token.getToken(),
-                        "user_id", token.getUser().getId()));
+        //TODO: как прописывать id пользака с dto
+        template.update("INSERT INTO tokens (token, user_id) VALUES (:token, :userId);",
+                Map.of("token", domain.getToken(),
+                        "user_id", domain.getUserId()));
     }
 }

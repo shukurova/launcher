@@ -11,8 +11,6 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class RegistrationTokenDomain {
     private String token;
-    //TODO: что записывать в базу? Достаточно ли id пользователя?
-    // id достаточно
-    private UserDomain user;
+    private long userId;
     private LocalDateTime created;
 }

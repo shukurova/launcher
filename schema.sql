@@ -14,17 +14,14 @@ CREATE TABLE authorities
 (
     id        SERIAL PRIMARY KEY,
     user_id   INTEGER NOT NULL REFERENCES users,
-    -- убрать дефолтное значение
-    authority TEXT    NOT NULL DEFAULT 'ROLE_USER' -- ROLE_ADMIN, ROLE_DEVELOPER, ROLE_APPROVER
+    authority TEXT    NOT NULL --ROLE_USER, ROLE_ADMIN, ROLE_DEVELOPER, ROLE_APPROVER
 );
 
--- TODO: спросить про корректность создания таблицы
--- Поменять тип даты
 CREATE TABLE tokens
 (
     token        TEXT    NOT NULL PRIMARY KEY,
     user_id      INTEGER NOT NULL REFERENCES users,
-    created_date DATE DEFAULT CURRENT_DATE
+    created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE games
@@ -46,7 +43,7 @@ CREATE TABLE comments
     user_id  INTEGER NOT NULL REFERENCES users,
     game_id  INTEGER NOT NULL REFERENCES games,
     content  TEXT    NOT NULL,
-    date     DATE    DEFAULT CURRENT_DATE,
+    date     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     likes    INTEGER DEFAULT 0,
     dislikes INTEGER DEFAULT 0
 );

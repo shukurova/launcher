@@ -6,6 +6,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.itpark.gameslauncher.domain.RegistrationTokenDomain;
+import ru.itpark.gameslauncher.domain.TokenDomain;
 import ru.itpark.gameslauncher.domain.UserDomain;
 import ru.itpark.gameslauncher.dto.RegistrationRequestDto;
 import ru.itpark.gameslauncher.repository.RegistrationTokenRepository;
@@ -41,9 +42,8 @@ public class RegistrationService {
 
             var token = new RegistrationTokenDomain(
                     UUID.randomUUID().toString(),
-                    userOptional.get(),
-                    LocalDateTime.now()
-            );
+                    user.getId(),
+                    LocalDateTime.now());
 
             registrationTokenRepository.save(token);
         }

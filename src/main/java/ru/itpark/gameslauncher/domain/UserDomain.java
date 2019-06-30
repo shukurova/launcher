@@ -21,10 +21,4 @@ public class UserDomain implements UserDetails {
     boolean accountNonLocked;
     boolean credentialsNonExpired;
     boolean enabled;
-
-    public UserDomain(long id, String name, String username) {
-        this.id = id;
-        this.name = name;
-        this.username = username;
-    }
 }
