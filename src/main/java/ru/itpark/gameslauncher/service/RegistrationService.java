@@ -6,9 +6,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.itpark.gameslauncher.domain.RegistrationTokenDomain;
-import ru.itpark.gameslauncher.domain.TokenDomain;
 import ru.itpark.gameslauncher.domain.UserDomain;
 import ru.itpark.gameslauncher.dto.RegistrationRequestDto;
+import ru.itpark.gameslauncher.exception.UsernameAlreadyExistsException;
 import ru.itpark.gameslauncher.repository.RegistrationTokenRepository;
 import ru.itpark.gameslauncher.repository.UserRepository;
 
@@ -25,6 +25,10 @@ public class RegistrationService {
     private final RegistrationTokenRepository registrationTokenRepository;
 
     public void register(RegistrationRequestDto dto) {
+        if (userRepository.existsByUserName(dto.getUsername())) {
+            throw new UsernameAlreadyExistsException(dto.getUsername());
+        }
+
         var userOptional = userRepository.findByUsername(dto.getUsername());
         if (userOptional.isEmpty()) {
             var user = new UserDomain(
@@ -40,12 +44,18 @@ public class RegistrationService {
 
             );
 
-            var token = new RegistrationTokenDomain(
-                    UUID.randomUUID().toString(),
+            var token = UUID.randomUUID().toString();
+            var tokenDomain = new RegistrationTokenDomain(
+                    token,
                     user.getId(),
                     LocalDateTime.now());
 
-            registrationTokenRepository.save(token);
+            registrationTokenRepository.save(tokenDomain);
+
+            userRepository.save(user);
+
+            //TODO: link for email
+            return;
         }
     }
 }
