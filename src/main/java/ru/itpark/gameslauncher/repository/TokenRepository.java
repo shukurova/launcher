@@ -6,6 +6,7 @@ import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 import ru.itpark.gameslauncher.domain.RegistrationTokenDomain;
+import ru.itpark.gameslauncher.domain.TokenDomain;
 import ru.itpark.gameslauncher.domain.UserDomain;
 import ru.itpark.gameslauncher.exception.TokenException;
 
@@ -27,7 +28,7 @@ public class TokenRepository {
     }
 
     //TODO: доделать запрос
-    public Optional<UserDomain> findById(final String token) {
+    public Optional<TokenDomain> findById(final String token) {
         try {
             return Optional.of(
                     template.query("SELECT u.id, u.name, u.username, FROM tokens WHERE token = :token",
