@@ -29,7 +29,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
     }
 
     try {
-      var authenticationRequest = new TokenAuthentication(token, null); // TODO: напомнили, когда будем проходить OAUTH2
+      var authenticationRequest = new TokenAuthentication(token, null);
       var authenticationResult = tokenService.authenticate(authenticationRequest);
 
       SecurityContextHolder.getContext().setAuthentication(authenticationResult);

@@ -15,10 +15,9 @@ public class RegistrationTokenRepository {
 
     public void save(RegistrationTokenDomain domain) {
         if (domain.getToken() == null) {
-            throw new InvalidTokenException();
+            throw new InvalidTokenException("Token can't be null");
         }
 
-        //TODO: как прописывать id пользака с dto
         template.update("INSERT INTO tokens (token, user_id) VALUES (:token, :userId);",
                 Map.of("token", domain.getToken(),
                         "user_id", domain.getUserId()));
