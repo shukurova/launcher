@@ -8,29 +8,30 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.itpark.gameslauncher.exception.InvalidTokenException;
+import ru.itpark.gameslauncher.repository.TokenRepository;
 
 @Service
 @Transactional
 @RequiredArgsConstructor
 public class TokenService implements AuthenticationManager {
-  private final TokenRepository tokenRepository;
+    private final TokenRepository tokenRepository;
 
-  @Override
-  public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-    var token = (String) authentication.getPrincipal();
+    @Override
+    public Authentication authenticate(Authentication authentication) throws AuthenticationException {
+        var token = (String) authentication.getPrincipal();
 
-    if (token == null) {
-      throw new InvalidTokenException("Token can't be null");
+        if (token == null) {
+            throw new InvalidTokenException("Token can't be null");
+        }
+
+        var tokenDomain = tokenRepository.findById(token).orElseThrow(() -> new InvalidTokenException("Token invalid"));
+        var userDomain = tokenDomain.getUser();
+
+        return new UsernamePasswordAuthenticationToken(
+                userDomain,
+                userDomain.getPassword(),
+                userDomain.getAuthorities()
+        );
+
     }
-
-    var tokenDomain = tokenRepository.findById(token).orElseThrow(() -> new InvalidTokenException("Token invalid"));
-    var userDomain = tokenDomain.getUser();
-
-    return new UsernamePasswordAuthenticationToken(
-        userDomain,
-        userDomain.getPassword(),
-        userDomain.getAuthorities()
-    );
-
-  }
 }
