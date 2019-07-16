@@ -9,8 +9,8 @@ import ru.itpark.gameslauncher.domain.RegistrationTokenDomain;
 import ru.itpark.gameslauncher.domain.UserDomain;
 import ru.itpark.gameslauncher.dto.RegistrationRequestDto;
 import ru.itpark.gameslauncher.exception.UsernameAlreadyExistsException;
+import ru.itpark.gameslauncher.repository.AuthTokenRepository;
 import ru.itpark.gameslauncher.repository.RegistrationTokenRepository;
-import ru.itpark.gameslauncher.repository.TokenRepository;
 import ru.itpark.gameslauncher.repository.UserRepository;
 
 import java.time.LocalDateTime;
@@ -23,7 +23,7 @@ import java.util.UUID;
 public class RegistrationService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final TokenRepository tokenRepository;
+    private final RegistrationTokenRepository registrationTokenRepository;
 
     public void register(RegistrationRequestDto dto) {
         if (userRepository.existsByUserName(dto.getUsername())) {
@@ -45,15 +45,16 @@ public class RegistrationService {
 
             );
 
+            userRepository.save(user);
+            userRepository.saveAuthorities(user);
+
             var token = UUID.randomUUID().toString();
             var tokenDomain = new RegistrationTokenDomain(
                     token,
                     user.getId(),
                     LocalDateTime.now());
 
-            tokenRepository.save(tokenDomain);
-
-            userRepository.save(user);
+            registrationTokenRepository.save(tokenDomain);
 
             //TODO: link for email
             return;

@@ -1,31 +1,34 @@
 package ru.itpark.gameslauncher.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AccountStatusUserDetailsChecker;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.itpark.gameslauncher.exception.TokenException;
-import ru.itpark.gameslauncher.repository.TokenRepository;
+import ru.itpark.gameslauncher.repository.AuthTokenRepository;
+import ru.itpark.gameslauncher.repository.UserRepository;
 
 @Service
 @Transactional
 @RequiredArgsConstructor
 public class TokenService implements AuthenticationManager {
-    private final TokenRepository tokenRepository;
+    private final AccountStatusUserDetailsChecker checker = new AccountStatusUserDetailsChecker();
+    private final AuthTokenRepository authTokenRepository;
+    private final UserRepository userRepository;
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         var token = (String) authentication.getPrincipal();
 
-        if (token == null) {
-            throw new TokenException("Token can't be null");
-        }
+        var tokenDomain = authTokenRepository.findById(token).orElseThrow(() -> new TokenException("Token invalid"));
+        var userDomain = userRepository.findById(tokenDomain.getUserId()).orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        var tokenDomain = tokenRepository.findById(token).orElseThrow(() -> new TokenException("Token invalid"));
-        var userDomain = tokenDomain.getUser();
+        checker.check(userDomain);
 
         return new UsernamePasswordAuthenticationToken(
                 userDomain,

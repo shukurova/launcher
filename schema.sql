@@ -17,11 +17,17 @@ CREATE TABLE authorities
     authority TEXT    NOT NULL --ROLE_USER, ROLE_ADMIN, ROLE_DEVELOPER, ROLE_APPROVER
 );
 
-CREATE TABLE tokens
+CREATE TABLE auth_tokens
 (
-    token        TEXT    NOT NULL PRIMARY KEY,
-    user_id      INTEGER NOT NULL REFERENCES users,
-    created_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    id      TEXT PRIMARY KEY NOT NULL,
+    user_id INTEGER          NOT NULL REFERENCES users
+);
+
+CREATE TABLE reg_tokens
+(
+    id      TEXT PRIMARY KEY NOT NULL,
+    user_id INTEGER REFERENCES users,
+    created TIMESTAMP        NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE games
@@ -44,8 +50,8 @@ CREATE TABLE comments
     game_id  INTEGER NOT NULL REFERENCES games,
     content  TEXT    NOT NULL,
     date     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    likes    INTEGER DEFAULT 0,
-    dislikes INTEGER DEFAULT 0
+    likes    INTEGER   DEFAULT 0,
+    dislikes INTEGER   DEFAULT 0
 );
 
 CREATE TABLE companies
