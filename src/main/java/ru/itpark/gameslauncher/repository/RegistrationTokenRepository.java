@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 import ru.itpark.gameslauncher.domain.RegistrationTokenDomain;
-import ru.itpark.gameslauncher.exception.InvalidTokenException;
+import ru.itpark.gameslauncher.exception.TokenException;
 
 import java.util.Map;
 
@@ -15,7 +15,7 @@ public class RegistrationTokenRepository {
 
     public void save(RegistrationTokenDomain domain) {
         if (domain.getToken() == null) {
-            throw new InvalidTokenException("Token can't be null");
+            throw new TokenException("Token can't be null");
         }
 
         template.update("INSERT INTO tokens (token, user_id) VALUES (:token, :userId);",

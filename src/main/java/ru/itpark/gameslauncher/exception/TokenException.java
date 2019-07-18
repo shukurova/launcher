@@ -4,12 +4,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
-public class InvalidTokenException extends RuntimeException {
-    public InvalidTokenException(String msg, Throwable t) {
+public class TokenException extends RuntimeException {
+    public TokenException(String msg, Throwable t) {
         super(msg, t);
     }
 
-    public InvalidTokenException(String msg) {
+    public TokenException(String msg) {
         super(msg);
     }
 }
