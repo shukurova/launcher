@@ -15,11 +15,10 @@ public class RegistrationTokenRepository {
 
     public void save(RegistrationTokenDomain domain) {
         if (domain.getToken() == null) {
-            throw new TokenException("Token can't be null");
+            throw new TokenException("Token invalid");
         }
-
-        template.update("INSERT INTO tokens (token, user_id) VALUES (:token, :userId);",
-                Map.of("token", domain.getToken(),
-                        "user_id", domain.getUserId()));
+        template.update("INSERT INTO reg_tokens (id, user_id) VALUES (:id, :userId);",
+                Map.of("id", domain.getToken(),
+                        "userId", domain.getUserId()));
     }
 }

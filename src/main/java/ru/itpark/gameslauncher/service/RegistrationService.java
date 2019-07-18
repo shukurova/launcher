@@ -9,6 +9,7 @@ import ru.itpark.gameslauncher.domain.RegistrationTokenDomain;
 import ru.itpark.gameslauncher.domain.UserDomain;
 import ru.itpark.gameslauncher.dto.RegistrationRequestDto;
 import ru.itpark.gameslauncher.exception.UsernameAlreadyExistsException;
+import ru.itpark.gameslauncher.repository.AuthTokenRepository;
 import ru.itpark.gameslauncher.repository.RegistrationTokenRepository;
 import ru.itpark.gameslauncher.repository.UserRepository;
 
@@ -44,6 +45,9 @@ public class RegistrationService {
 
             );
 
+            userRepository.save(user);
+            userRepository.saveAuthorities(user);
+
             var token = UUID.randomUUID().toString();
             var tokenDomain = new RegistrationTokenDomain(
                     token,
@@ -51,8 +55,6 @@ public class RegistrationService {
                     LocalDateTime.now());
 
             registrationTokenRepository.save(tokenDomain);
-
-            userRepository.save(user);
 
             //TODO: link for email
             return;
