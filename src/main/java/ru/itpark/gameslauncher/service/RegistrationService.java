@@ -9,7 +9,6 @@ import ru.itpark.gameslauncher.domain.RegistrationTokenDomain;
 import ru.itpark.gameslauncher.domain.UserDomain;
 import ru.itpark.gameslauncher.dto.RegistrationRequestDto;
 import ru.itpark.gameslauncher.exception.UsernameAlreadyExistsException;
-import ru.itpark.gameslauncher.repository.AuthTokenRepository;
 import ru.itpark.gameslauncher.repository.RegistrationTokenRepository;
 import ru.itpark.gameslauncher.repository.UserRepository;
 
@@ -24,6 +23,7 @@ public class RegistrationService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final RegistrationTokenRepository registrationTokenRepository;
+    private final EmailService emailService;
 
     public void register(RegistrationRequestDto dto) {
         if (userRepository.existsByUserName(dto.getUsername())) {
@@ -36,6 +36,7 @@ public class RegistrationService {
                     0L,
                     dto.getName(),
                     dto.getUsername(),
+                    dto.getEmail(),
                     passwordEncoder.encode(dto.getPassword()),
                     List.of(new SimpleGrantedAuthority("ROLE_USER")),
                     true,
@@ -45,19 +46,19 @@ public class RegistrationService {
 
             );
 
-            userRepository.save(user);
-            userRepository.saveAuthorities(user);
+            long userId = userRepository.save(user);
 
             var token = UUID.randomUUID().toString();
             var tokenDomain = new RegistrationTokenDomain(
                     token,
-                    user.getId(),
+                    userId,
                     LocalDateTime.now());
 
             registrationTokenRepository.save(tokenDomain);
 
-            //TODO: link for email
-            return;
+            emailService.sendSimpleMessage(dto.getEmail(), "Please, confirm your registration", token);
+        } else {
+
         }
     }
 }

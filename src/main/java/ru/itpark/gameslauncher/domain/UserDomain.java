@@ -15,6 +15,7 @@ public class UserDomain implements UserDetails {
     private long id;
     private String name;
     private String username;
+    private String email;
     private String password;
     private Collection<? extends GrantedAuthority> authorities;
     boolean accountNonExpired;

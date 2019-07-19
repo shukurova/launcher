@@ -2,9 +2,10 @@ POST http://localhost:8080/api/registration
 Content-Type: application/json
 
 {
-  "name": "Kolya",
-  "username": "kolya",
-  "password": "password"
+  "name": "Alina",
+  "username": "alina",
+  "password": "password",
+  "email": "alina@shukurova.com"
 }
 
 ###

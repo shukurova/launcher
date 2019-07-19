@@ -10,7 +10,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.itpark.gameslauncher.exception.TokenException;
-import ru.itpark.gameslauncher.repository.AuthTokenRepository;
+import ru.itpark.gameslauncher.repository.AuthenticationTokenRepository;
 import ru.itpark.gameslauncher.repository.UserRepository;
 
 @Service
@@ -18,14 +18,14 @@ import ru.itpark.gameslauncher.repository.UserRepository;
 @RequiredArgsConstructor
 public class TokenService implements AuthenticationManager {
     private final AccountStatusUserDetailsChecker checker = new AccountStatusUserDetailsChecker();
-    private final AuthTokenRepository authTokenRepository;
+    private final AuthenticationTokenRepository authenticationTokenRepository;
     private final UserRepository userRepository;
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         var token = (String) authentication.getPrincipal();
 
-        var tokenDomain = authTokenRepository.findById(token).orElseThrow(() -> new TokenException("Token invalid"));
+        var tokenDomain = authenticationTokenRepository.findById(token).orElseThrow(() -> new TokenException("Token invalid"));
         var userDomain = userRepository.findById(tokenDomain.getUserId()).orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         checker.check(userDomain);

@@ -1,9 +1,6 @@
 package ru.itpark.gameslauncher.exception;
 
 
-import org.springframework.security.core.AuthenticationException;
-
-public class TokenException extends AuthenticationException {
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
