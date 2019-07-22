@@ -21,17 +21,17 @@ import ru.itpark.gameslauncher.filter.TokenAuthenticationFilter;
 @RequiredArgsConstructor
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
-    private final TokenAuthenticationFilter tokenFilter;
+    private final TokenAuthenticationFilter tokenAuthenticationFilter;
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
                 .csrf().disable()
-                .cors() // cors -> corsConfigurationSource
+                .cors()
                 .and()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
-                .addFilterAfter(tokenFilter, BasicAuthenticationFilter.class)
+                .addFilterAfter(tokenAuthenticationFilter, BasicAuthenticationFilter.class)
                 .authorizeRequests()
                 .antMatchers("/api/authentication", "/api/authentication/confirm").anonymous()
                 .antMatchers("/api/registration", "/api/registration/confirm").anonymous()

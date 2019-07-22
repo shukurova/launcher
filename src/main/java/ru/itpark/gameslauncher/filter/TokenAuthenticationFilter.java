@@ -5,7 +5,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-import ru.itpark.gameslauncher.service.TokenService;
+import ru.itpark.gameslauncher.service.TokenAuthenticationManager;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -16,7 +16,7 @@ import java.io.IOException;
 @Component
 @RequiredArgsConstructor
 public class TokenAuthenticationFilter extends OncePerRequestFilter {
-    private final TokenService tokenService;
+    private final TokenAuthenticationManager tokenAuthenticationManager;
     private final TokenAuthenticationEntryPoint authenticationEntryPoint;
 
     @Override
@@ -30,7 +30,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
 
         try {
             var authenticationRequest = new TokenAuthentication(token, null);
-            var authenticationResult = tokenService.authenticate(authenticationRequest);
+            var authenticationResult = tokenAuthenticationManager.authenticate(authenticationRequest);
 
             SecurityContextHolder.getContext().setAuthentication(authenticationResult);
         } catch (AuthenticationException e) {
