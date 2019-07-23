@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.itpark.gameslauncher.domain.AuthenticationTokenDomain;
 import ru.itpark.gameslauncher.dto.AuthenticationTokenRequestDto;
 import ru.itpark.gameslauncher.dto.AuthenticationTokenResponseDto;
+import ru.itpark.gameslauncher.exception.AccountNotEnabledException;
 import ru.itpark.gameslauncher.repository.AuthenticationTokenRepository;
 import ru.itpark.gameslauncher.repository.UserRepository;
 
@@ -25,8 +26,12 @@ public class AuthenticationService {
   public AuthenticationTokenResponseDto authenticate(AuthenticationTokenRequestDto dto) {
     var userDomain = userRepository.findByUsername(dto.getUsername()).orElseThrow(() -> new UsernameNotFoundException(dto.getUsername()));
 
+    if (!userDomain.isEnabled()) {
+      throw new AccountNotEnabledException("Please, at first confirm your account! Check your email.");
+    }
+
     if (!passwordEncoder.matches(dto.getPassword(), userDomain.getPassword())) {
-      throw new BadCredentialsException(dto.getUsername());
+      throw new BadCredentialsException("Please, check your username and password!");
     }
 
     var token = UUID.randomUUID().toString();

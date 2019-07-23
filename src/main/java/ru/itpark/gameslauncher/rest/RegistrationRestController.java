@@ -24,4 +24,6 @@ public class RegistrationRestController {
     public AuthenticationTokenResponseDto confirm(@RequestBody RegistrationConfirmationRequestDto dto) {
         return service.confirm(dto);
     }
+
+    //TODO: продумать повторную отправку токена
 }

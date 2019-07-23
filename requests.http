@@ -14,7 +14,7 @@ POST http://localhost:8080/api/authentication
 Content-Type: application/json
 
 {
-  "username": "kolya",
+  "username": "petya",
   "password": "password"
 }
 

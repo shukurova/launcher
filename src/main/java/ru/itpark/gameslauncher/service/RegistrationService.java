@@ -34,7 +34,7 @@ public class RegistrationService {
 
     public void register(RegistrationRequestDto dto) {
         if (userRepository.existsByUserName(dto.getUsername())) {
-            throw new UsernameAlreadyExistsException(dto.getUsername());
+            throw new UsernameAlreadyExistsException(String.format("Username with this username %s already exists!", dto.getUsername()));
         }
 
         var userOptional = userRepository.findByUsername(dto.getUsername());
@@ -76,6 +76,10 @@ public class RegistrationService {
         }
 
         var userId = token.get().getUserId();
+        if (registrationTokenRepository.countTokenByUserId(userId) >= 3) {
+            // TODO: додумать логику
+            throw new TokenException("Too many tries for registration!");
+        }
 
         var user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found!"));
         user.setEnabled(true);

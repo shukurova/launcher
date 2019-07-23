@@ -112,4 +112,6 @@ public class UserRepository {
             return Optional.empty();
         }
     }
+
+    //TODO: удаление пользователей, если через какой-то промежуток времени их аккаунты остаются enabled = false
 }
