@@ -63,9 +63,7 @@ public class RegistrationService {
 
             registrationTokenRepository.save(tokenDomain);
 
-            //emailService.sendSimpleMessage(dto.getEmail(), "Please, confirm your registration", token);
-        } else {
-
+            emailService.sendSimpleMessage(dto.getEmail(), "Please, confirm your registration", token);
         }
     }
 

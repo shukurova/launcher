@@ -2,10 +2,10 @@ POST http://localhost:8080/api/registration
 Content-Type: application/json
 
 {
-  "name": "Petya",
-  "username": "petya",
+  "name": "Alina",
+  "username": "alina",
   "password": "password",
-  "email": "petya@mail.ru"
+  "email": "alina@shukurov.com"
 }
 
 ###
@@ -24,5 +24,14 @@ client.test("Request executed successfully", function() {
   client.global.set("auth_token", response.body.token)
 });
 %}
+
+###
+
+POST http://localhost:8080/api/registration/confirm
+Content-Type: application/json
+
+{
+  "token": "d338d041-7315-4f96-973a-9423b35b632f"
+}
 
 ###

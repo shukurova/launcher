@@ -38,16 +38,14 @@ public class RegistrationTokenRepository {
             throw new TokenException("Token invalid");
         }
         try {
-            var user =
+            return Optional.of(
                     template.queryForObject("SELECT id, user_id, created FROM reg_tokens WHERE id = :id;",
                             Map.of("id", dto.getToken()),
                             (rs, i) -> new RegistrationTokenDomain(
                                     rs.getString("id"),
                                     rs.getLong("user_id"),
                                     rs.getTimestamp("created").toLocalDateTime())
-
-                    );
-            return Optional.of(user);
+                    ));
         } catch (
                 EmptyResultDataAccessException e) {
             return Optional.empty();
