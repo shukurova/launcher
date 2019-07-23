@@ -2,8 +2,9 @@ package ru.itpark.gameslauncher.repository;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.EmptyResultDataAccessException;
-import org.springframework.jdbc.core.BeanPropertyRowMapper;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Repository;
 import ru.itpark.gameslauncher.domain.RegistrationTokenDomain;
 import ru.itpark.gameslauncher.dto.RegistrationConfirmationRequestDto;
@@ -16,6 +17,12 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class RegistrationTokenRepository {
     private final NamedParameterJdbcTemplate template;
+
+    @Scheduled(fixedRate = 60 * 1000)
+    public void dropTokensByTime() {
+        template.update("DELETE FROM reg_tokens WHERE (SELECT extract(epoch FROM (SELECT CURRENT_TIMESTAMP::timestamp - created::timestamp)) / 60) >= 30;",
+                new MapSqlParameterSource());
+    }
 
     public void save(RegistrationTokenDomain domain) {
         if (domain.getToken() == null) {

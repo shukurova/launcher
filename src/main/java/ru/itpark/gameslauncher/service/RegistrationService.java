@@ -2,7 +2,6 @@ package ru.itpark.gameslauncher.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -77,10 +76,6 @@ public class RegistrationService {
         }
 
         var userId = token.get().getUserId();
-        if (registrationTokenRepository.countTokenByUserId(userId) >= 3) {
-            // TODO: додумать логику
-            throw new TokenException("Too many registrations!");
-        }
 
         var user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found!"));
         user.setEnabled(true);
