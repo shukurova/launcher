@@ -2,10 +2,19 @@ POST http://localhost:8080/api/registration
 Content-Type: application/json
 
 {
-  "name": "Alina",
-  "username": "alina",
+  "name": "Olya",
+  "username": "olya",
   "password": "password",
-  "email": "alina@shukurov.com"
+  "email": "olya@gmail.com"
+}
+
+###
+
+POST http://localhost:8080/api/registration/confirm
+Content-Type: application/json
+
+{
+  "token": "801d7820-2efc-438d-a145-2a4c572b6fc8"
 }
 
 ###
@@ -14,7 +23,7 @@ POST http://localhost:8080/api/authentication
 Content-Type: application/json
 
 {
-  "username": "petya",
+  "username": "vasya",
   "password": "password"
 }
 
@@ -27,11 +36,48 @@ client.test("Request executed successfully", function() {
 
 ###
 
-POST http://localhost:8080/api/registration/confirm
-Content-Type: application/json
+GET http://localhost:8080/api/games
+X-Token: {{auth_token}}
 
-{
-  "token": "d338d041-7315-4f96-973a-9423b35b632f"
-}
+> {%
+client.test("Request executed successfully", function() {
+  client.assert(response.status === 200, "Response status is not 200");
+});
+%}
+
+###
+
+GET http://localhost:8080/api/games/1
+X-Token: {{auth_token}}
+
+> {%
+client.test("Request executed successfully", function() {
+  client.assert(response.status === 200, "Response status is not 200");
+});
+%}
+
+###
+
+GET http://localhost:8080/api/games/not-approved
+X-Token: {{auth_token}}
+
+> {%
+client.test("Request executed successfully", function() {
+  client.assert(response.status === 200, "Response status is not 200");
+});
+%}
+
+
+###
+
+POST http://localhost:8080/api/games/not-approved/11/approve
+Content-Type: application/json
+X-Token: {{auth_token}}
+
+> {%
+client.test("Request executed successfully", function() {
+  client.assert(response.status === 200, "Response status is not 200");
+});
+%}
 
 ###

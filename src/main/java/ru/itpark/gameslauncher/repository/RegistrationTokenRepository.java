@@ -33,10 +33,7 @@ public class RegistrationTokenRepository {
                         "userId", domain.getUserId()));
     }
 
-    public final Optional<RegistrationTokenDomain> findByToken(RegistrationConfirmationRequestDto dto) {
-        if (dto.getToken() == null) {
-            throw new TokenException("Token invalid");
-        }
+    public Optional<RegistrationTokenDomain> findByToken(RegistrationConfirmationRequestDto dto) {
         try {
             return Optional.of(
                     template.queryForObject("SELECT id, user_id, created FROM reg_tokens WHERE id = :id;",
@@ -46,13 +43,12 @@ public class RegistrationTokenRepository {
                                     rs.getLong("user_id"),
                                     rs.getTimestamp("created").toLocalDateTime())
                     ));
-        } catch (
-                EmptyResultDataAccessException e) {
+        } catch (EmptyResultDataAccessException e) {
             return Optional.empty();
         }
     }
 
-    public final int countTokenByUserId(final long userId) {
+    public int countTokenByUserId(final long userId) {
         return template.queryForObject("SELECT COUNT(id) FROM reg_tokens WHERE user_id = :userId;",
                 Map.of("userId", userId),
                 Integer.class);

@@ -37,7 +37,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .authorizeRequests()
                 .antMatchers("/api/authentication", "/api/authentication/confirm").anonymous()
                 .antMatchers("/api/registration", "/api/registration/confirm").anonymous()
-                .antMatchers("/api/**").hasRole("USER");
+                .antMatchers("/api/**").authenticated();
     }
 
     @Bean

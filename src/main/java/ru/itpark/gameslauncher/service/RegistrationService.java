@@ -37,6 +37,7 @@ public class RegistrationService {
             throw new UsernameAlreadyExistsException(String.format("Username with this username %s already exists!", dto.getUsername()));
         }
 
+        var token = UUID.randomUUID().toString();
         var userOptional = userRepository.findByUsername(dto.getUsername());
         if (userOptional.isEmpty()) {
             var user = new UserDomain(
@@ -54,8 +55,6 @@ public class RegistrationService {
             );
 
             long userId = userRepository.save(user);
-
-            var token = UUID.randomUUID().toString();
             var tokenDomain = new RegistrationTokenDomain(
                     token,
                     userId,
@@ -63,7 +62,7 @@ public class RegistrationService {
 
             registrationTokenRepository.save(tokenDomain);
 
-            emailService.sendSimpleMessage(dto.getEmail(), "Please, confirm your registration", token);
+            //emailService.sendSimpleMessage(dto.getEmail(), "Please, confirm your registration", token);
         }
     }
 
