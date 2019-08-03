@@ -20,7 +20,7 @@ public class RegistrationTokenRepository {
 
     @Scheduled(fixedRate = 60 * 1000)
     public void dropTokensByTime() {
-        template.update("DELETE FROM reg_tokens WHERE (SELECT extract(epoch FROM (SELECT CURRENT_TIMESTAMP::timestamp - created::timestamp)) / 60) >= 30;",
+        template.update("DELETE FROM registration_tokens WHERE (SELECT extract(epoch FROM (SELECT CURRENT_TIMESTAMP::timestamp - created::timestamp)) / 60) >= 30;",
                 new MapSqlParameterSource());
     }
 
@@ -28,7 +28,7 @@ public class RegistrationTokenRepository {
         if (domain.getToken() == null) {
             throw new TokenException("Token invalid");
         }
-        template.update("INSERT INTO reg_tokens (id, user_id) VALUES (:id, :userId);",
+        template.update("INSERT INTO registration_tokens (id, user_id) VALUES (:id, :userId);",
                 Map.of("id", domain.getToken(),
                         "userId", domain.getUserId()));
     }
@@ -36,7 +36,7 @@ public class RegistrationTokenRepository {
     public Optional<RegistrationTokenDomain> findByToken(RegistrationConfirmationRequestDto dto) {
         try {
             return Optional.of(
-                    template.queryForObject("SELECT id, user_id, created FROM reg_tokens WHERE id = :id;",
+                    template.queryForObject("SELECT id, user_id, created FROM registration_tokens WHERE id = :id;",
                             Map.of("id", dto.getToken()),
                             (rs, i) -> new RegistrationTokenDomain(
                                     rs.getString("id"),
@@ -49,7 +49,7 @@ public class RegistrationTokenRepository {
     }
 
     public int countTokenByUserId(final long userId) {
-        return template.queryForObject("SELECT COUNT(id) FROM reg_tokens WHERE user_id = :userId;",
+        return template.queryForObject("SELECT COUNT(id) FROM registration_tokens WHERE user_id = :userId;",
                 Map.of("userId", userId),
                 Integer.class);
     }

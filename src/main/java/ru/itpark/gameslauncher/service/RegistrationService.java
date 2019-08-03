@@ -11,7 +11,9 @@ import ru.itpark.gameslauncher.domain.UserDomain;
 import ru.itpark.gameslauncher.dto.AuthenticationTokenResponseDto;
 import ru.itpark.gameslauncher.dto.RegistrationConfirmationRequestDto;
 import ru.itpark.gameslauncher.dto.RegistrationRequestDto;
+import ru.itpark.gameslauncher.dto.RegistrationTokenResponseDto;
 import ru.itpark.gameslauncher.exception.TokenException;
+import ru.itpark.gameslauncher.exception.UserAlreadyEnabledException;
 import ru.itpark.gameslauncher.exception.UserNotFoundException;
 import ru.itpark.gameslauncher.exception.UsernameAlreadyExistsException;
 import ru.itpark.gameslauncher.repository.AuthenticationTokenRepository;
@@ -32,9 +34,9 @@ public class RegistrationService {
     private final AuthenticationTokenRepository authenticationTokenRepository;
     private final EmailService emailService;
 
-    public void register(RegistrationRequestDto dto) {
+    public RegistrationTokenResponseDto register(RegistrationRequestDto dto) {
         if (userRepository.existsByUserName(dto.getUsername())) {
-            throw new UsernameAlreadyExistsException(String.format("Username with this username %s already exists!", dto.getUsername()));
+            throw new UsernameAlreadyExistsException(String.format("User with this username %s already exists!", dto.getUsername()));
         }
 
         var token = UUID.randomUUID().toString();
@@ -50,8 +52,8 @@ public class RegistrationService {
                     true,
                     true,
                     true,
-                    false
-
+                    false,
+                    LocalDateTime.now()
             );
 
             long userId = userRepository.save(user);
@@ -64,6 +66,7 @@ public class RegistrationService {
 
             //emailService.sendSimpleMessage(dto.getEmail(), "Please, confirm your registration", token);
         }
+        return new RegistrationTokenResponseDto(token);
     }
 
     public AuthenticationTokenResponseDto confirm(RegistrationConfirmationRequestDto dto) {
@@ -73,17 +76,34 @@ public class RegistrationService {
         }
 
         var userId = token.get().getUserId();
-        if (registrationTokenRepository.countTokenByUserId(userId) >= 3) {
-            // TODO: додумать логику
-            throw new TokenException("Too many tries for registration!");
-        }
 
         var user = userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("User not found!"));
-        user.setEnabled(true);
+        if (user.isEnabled()) {
+         throw new UserAlreadyEnabledException("Your account already confirmed!");
+        }
+        userRepository.enableUser(user.getId());
 
         var authToken = UUID.randomUUID().toString();
         var tokenDomain = new AuthenticationTokenDomain(authToken, userId);
         authenticationTokenRepository.save(tokenDomain);
         return new AuthenticationTokenResponseDto(authToken);
+    }
+
+    public RegistrationTokenResponseDto requestNewToken(RegistrationRequestDto dto) {
+        var username = dto.getUsername();
+        var user = userRepository.findByUsername(username).orElseThrow(() -> new UserNotFoundException("User not found!"));
+        var userId = user.getId();
+        if (registrationTokenRepository.countTokenByUserId(userId) >= 3) {
+            throw new TokenException("Too many tries for registration! Please, try after 30 minutes");
+        }
+
+        var newToken = UUID.randomUUID().toString();
+        var tokenDomain = new RegistrationTokenDomain(
+                newToken,
+                userId,
+                LocalDateTime.now());
+
+        registrationTokenRepository.save(tokenDomain);
+        return new RegistrationTokenResponseDto(newToken);
     }
 }

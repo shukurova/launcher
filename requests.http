@@ -2,10 +2,22 @@ POST http://localhost:8080/api/registration
 Content-Type: application/json
 
 {
-  "name": "Olya",
-  "username": "olya",
+  "name": "Test",
+  "username": "test",
   "password": "password",
-  "email": "olya@gmail.com"
+  "email": "test@gmail.com"
+}
+
+###
+
+POST http://localhost:8080/api/registration/request-new-token
+Content-Type: application/json
+
+{
+  "name": "Kto-to",
+  "username": "kto-to",
+  "password": "password",
+  "email": "kto-to@gmail.com"
 }
 
 ###
@@ -14,7 +26,7 @@ POST http://localhost:8080/api/registration/confirm
 Content-Type: application/json
 
 {
-  "token": "801d7820-2efc-438d-a145-2a4c572b6fc8"
+  "token": "ec5178df-57bd-4ba4-a2b7-05934937788f"
 }
 
 ###
@@ -23,7 +35,7 @@ POST http://localhost:8080/api/authentication
 Content-Type: application/json
 
 {
-  "username": "vasya",
+  "username": "admin",
   "password": "password"
 }
 
@@ -47,7 +59,7 @@ client.test("Request executed successfully", function() {
 
 ###
 
-GET http://localhost:8080/api/games/1
+GET http://localhost:8080/api/games/21
 X-Token: {{auth_token}}
 
 > {%
@@ -67,12 +79,48 @@ client.test("Request executed successfully", function() {
 });
 %}
 
-
 ###
 
 POST http://localhost:8080/api/games/not-approved/11/approve
 Content-Type: application/json
 X-Token: {{auth_token}}
+
+> {%
+client.test("Request executed successfully", function() {
+  client.assert(response.status === 200, "Response status is not 200");
+});
+%}
+
+###
+
+POST http://localhost:8080/api/games
+Content-Type: application/json
+X-Token: {{auth_token}}
+
+{
+  "name": "Test Game 3",
+  "releaseDate": "2032-01-22",
+  "content": "Test Game content 2",
+  "coverage": "test-cover.png",
+  "status": "TODO",
+  "genre": "RPG"
+}
+
+> {%
+client.test("Request executed successfully", function() {
+  client.assert(response.status === 200, "Response status is not 200");
+});
+%}
+
+###
+
+POST http://localhost:8080/api/games/not-approved/21/return
+Content-Type: application/json
+X-Token: {{auth_token}}
+
+{
+  "comment": "Please, edit your content"
+}
 
 > {%
 client.test("Request executed successfully", function() {

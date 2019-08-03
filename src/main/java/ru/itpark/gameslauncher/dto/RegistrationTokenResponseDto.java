@@ -7,9 +7,6 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class GameResponseDto {
-    private long id;
-    private String name;
-    private long companyId;
-    private String coverage;
+public class RegistrationTokenResponseDto {
+  private String token;
 }

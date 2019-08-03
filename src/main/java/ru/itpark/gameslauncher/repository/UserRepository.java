@@ -5,6 +5,7 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Repository;
@@ -19,10 +20,16 @@ import java.util.Optional;
 public class UserRepository {
     private final NamedParameterJdbcTemplate template;
 
+    @Scheduled(fixedRate = 60 * 1000)
+    public void dropDisabledUsersByTime() {
+        template.update("DELETE FROM users WHERE enabled = false AND (SELECT extract(epoch FROM (SELECT CURRENT_TIMESTAMP::timestamp - created::timestamp)) / 60) >= 60;",
+                new MapSqlParameterSource());
+    }
+
     public Optional<UserDomain> findByUsername(final String username) {
         try {
             var user =
-                    template.queryForObject("SELECT id, name, username, email, password, account_non_expired, account_non_locked, credentials_non_expired, enabled FROM users WHERE username = :username;",
+                    template.queryForObject("SELECT id, name, username, email, password, account_non_expired, account_non_locked, credentials_non_expired, enabled, created FROM users WHERE username = :username;",
                             Map.of("username", username),
                             (rs, i) -> new UserDomain(
                                     rs.getLong("id"),
@@ -34,7 +41,8 @@ public class UserRepository {
                                     rs.getBoolean("account_non_expired"),
                                     rs.getBoolean("account_non_locked"),
                                     rs.getBoolean("credentials_non_expired"),
-                                    rs.getBoolean("enabled")
+                                    rs.getBoolean("enabled"),
+                                    rs.getTimestamp("created").toLocalDateTime()
                             )
                     );
 
@@ -83,7 +91,7 @@ public class UserRepository {
         try {
             var user =
                     template.queryForObject(
-                            "SELECT id, name, username, email, password, account_non_expired, account_non_locked, credentials_non_expired, enabled FROM users WHERE id = :id",
+                            "SELECT id, name, username, email, password, account_non_expired, account_non_locked, credentials_non_expired, enabled, created FROM users WHERE id = :id",
                             Map.of("id", id),
                             (rs, i) -> new UserDomain(
                                     rs.getLong("id"),
@@ -95,7 +103,8 @@ public class UserRepository {
                                     rs.getBoolean("account_non_expired"),
                                     rs.getBoolean("account_non_locked"),
                                     rs.getBoolean("credentials_non_expired"),
-                                    rs.getBoolean("enabled")
+                                    rs.getBoolean("enabled"),
+                                    rs.getTimestamp("created").toLocalDateTime()
                             )
                     );
 
@@ -113,5 +122,8 @@ public class UserRepository {
         }
     }
 
-    //TODO: удаление пользователей, если через какой-то промежуток времени их аккаунты остаются enabled == false
+    public void enableUser(long id) {
+            template.update("UPDATE users SET enabled = true WHERE id = :id;",
+                    Map.of("id", id));
+    }
 }

@@ -10,11 +10,10 @@ import org.springframework.stereotype.Repository;
 import ru.itpark.gameslauncher.domain.game.GameDomain;
 import ru.itpark.gameslauncher.domain.game.GameGenre;
 import ru.itpark.gameslauncher.domain.game.GameStatus;
-import ru.itpark.gameslauncher.dto.GameRequestDto;
 import ru.itpark.gameslauncher.dto.GameResponseDto;
+import ru.itpark.gameslauncher.dto.ReturnedGameResponseDto;
 import ru.itpark.gameslauncher.exception.GameNotFoundException;
 
-import java.sql.ResultSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -32,7 +31,7 @@ public class GameRepository {
     public Optional<GameDomain> findById(long id) {
         try {
             var game = template.queryForObject(
-                    "SELECT id, name, release_date, content, coverage, company_id, status, genre, likes, dislikes, approved FROM games WHERE id = :id AND approved = true",
+                    "SELECT id, name, release_date, content, coverage, company_id, status, genre, likes, dislikes, approved, returned FROM games WHERE id = :id AND approved = true",
                     Map.of("id", id),
                     (rs, i) -> new GameDomain(
                             rs.getLong("id"),
@@ -41,11 +40,12 @@ public class GameRepository {
                             rs.getString("content"),
                             rs.getString("coverage"),
                             rs.getLong("company_id"),
-                            GameStatus.valueOf(rs.getString("status")),
-                            GameGenre.valueOf(rs.getString("genre")),
+                            GameStatus.getStatusByIndex(rs.getInt("status")),
+                            GameGenre.getGenreByIndex(rs.getInt("genre")),
                             rs.getInt("likes"),
                             rs.getInt("dislikes"),
-                            rs.getBoolean("approved")
+                            rs.getBoolean("approved"),
+                            rs.getBoolean("returned")
                     ));
 
             return Optional.of(game);
@@ -62,7 +62,7 @@ public class GameRepository {
     public Optional<GameDomain> findNotApprovedById(long id) {
         try {
             var game = template.queryForObject(
-                    "SELECT id, name, release_date, content, coverage, company_id, status, genre, likes, dislikes, approved FROM games WHERE id = :id AND approved = false",
+                    "SELECT id, name, release_date, content, coverage, company_id, status, genre, likes, dislikes, approved, returned FROM games WHERE id = :id AND approved = false",
                     Map.of("id", id),
                     (rs, i) -> new GameDomain(
                             rs.getLong("id"),
@@ -71,11 +71,12 @@ public class GameRepository {
                             rs.getString("content"),
                             rs.getString("coverage"),
                             rs.getLong("company_id"),
-                            GameStatus.valueOf(rs.getString("status")),
-                            GameGenre.valueOf(rs.getString("genre")),
+                            GameStatus.getStatusByIndex(rs.getInt("status")),
+                            GameGenre.getGenreByIndex(rs.getInt("genre")),
                             rs.getInt("likes"),
                             rs.getInt("dislikes"),
-                            rs.getBoolean("approved")
+                            rs.getBoolean("approved"),
+                            rs.getBoolean("returned")
                     ));
 
             return Optional.of(game);
@@ -86,20 +87,23 @@ public class GameRepository {
 
     public Optional<GameDomain> create(GameDomain domain) {
         var keyHolder = new GeneratedKeyHolder();
-        template.update("INSERT INTO games (name, release_date, content, coverage, company_id, status, genre) VALUES(:name, :releaseDate, :content, :coverage, :companyId, :status, :genre);",
-                new MapSqlParameterSource(
-                        Map.of("name", domain.getName(),
-                                "releaseDate", domain.getReleaseDate(),
-                                "content", domain.getContent(),
-                                "coverage", domain.getCoverage(),
-                                "companyId", domain.getCompanyId(),
-                                "status", domain.getStatus(),
-                                "genre", domain.getGenre())),
-                keyHolder);
-
-        long gameId = ((Number) keyHolder.getKeys().get("id")).longValue();
-
-        return findById(gameId);
+        try {
+            template.update("INSERT INTO games (name, release_date, content, coverage, company_id, status, genre) VALUES (:name, :releaseDate, :content, :coverage, :companyId, :status, :genre);",
+                    new MapSqlParameterSource(
+                            Map.of("name", domain.getName(),
+                                    "releaseDate", domain.getReleaseDate(),
+                                    "content", domain.getContent(),
+                                    "coverage", domain.getCoverage(),
+                                    "companyId", domain.getCompanyId(),
+                                    "status", domain.getStatus().getIndex(),
+                                    "genre", domain.getGenre().getIndex())),
+                    keyHolder);
+            var key = ((Number) keyHolder.getKeys().get("id")).longValue();
+            domain.setId(key);
+            return Optional.of(domain);
+        } catch (EmptyResultDataAccessException e) {
+            return Optional.empty();
+        }
     }
 
     public boolean existsByName(final String name) {
@@ -111,35 +115,34 @@ public class GameRepository {
         return userCount > 0;
     }
 
-    public Optional<GameDomain> findByName(final String name) {
-        try {
-            var game =
-                    template.queryForObject("SELECT id, name, release_date, content, coverage, company_id, status, genre, likes, dislikes, approved FROM games WHERE name = :name;",
-                            Map.of("name", name),
-                            (rs, i) -> new GameDomain(
-                                    rs.getLong("id"),
-                                    rs.getString("name"),
-                                    rs.getDate("release_date").toLocalDate(),
-                                    rs.getString("content"),
-                                    rs.getString("coverage"),
-                                    rs.getLong("company_id"),
-                                    GameStatus.valueOf(rs.getString("status")),
-                                    GameGenre.valueOf(rs.getString("genre")),
-                                    rs.getInt("likes"),
-                                    rs.getInt("dislikes"),
-                                    rs.getBoolean("approved")
-                            )
-                    );
-
-            return Optional.of(game);
-        } catch (EmptyResultDataAccessException e) {
-            return Optional.empty();
-        }
-    }
-
-    //TODO: переписать подтверждение игры
     public void approve(long id) {
         template.update("UPDATE games SET approved = true WHERE id = :id;",
                 Map.of("id", id));
+    }
+
+    private ReturnedGameResponseDto findNotApprovedGameWithCommentById(long gameId) {
+        return template.queryForObject("SELECT g.id, g.name, g.release_date, g.content, g.coverage, g.company_id, g.status, g.genre, rgc.comment FROM games g JOIN returned_games_comments rgc WHERE g.id = :id AND rgc.game_id = :id",
+                Map.of("id", gameId),
+                (rs, i) -> new ReturnedGameResponseDto(
+                        rs.getLong("id"),
+                        rs.getString("name"),
+                        rs.getDate("release_date").toLocalDate(),
+                        rs.getString("content"),
+                        rs.getString("coverage"),
+                        rs.getLong("company_id"),
+                        GameStatus.getStatusByIndex(rs.getInt("status")),
+                        GameGenre.getGenreByIndex(rs.getInt("genre")),
+                        rs.getString("comment")
+                ));
+    }
+
+    //TODO: почему comment == null
+    public ReturnedGameResponseDto returnGame(long id, long companyId, String comment) {
+        template.update("INSERT INTO returned_games_comments (game_id, company_id, comment) VALUES (:id, :companyId, :comment)",
+                new MapSqlParameterSource(
+                        Map.of("id", id,
+                                "companyId", companyId,
+                                "comment", comment)));
+        return findNotApprovedGameWithCommentById(id);
     }
 }

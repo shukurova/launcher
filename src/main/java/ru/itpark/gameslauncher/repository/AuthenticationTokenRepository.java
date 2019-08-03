@@ -19,7 +19,7 @@ public class AuthenticationTokenRepository {
         try {
             return Optional.of(
                     template.queryForObject(
-                            "SELECT id, user_id FROM auth_tokens WHERE id = :id",
+                            "SELECT id, user_id FROM authentication_tokens WHERE id = :id",
                             Map.of("id", token),
                             (rs, i) -> new AuthenticationTokenDomain(
                                     rs.getString("id"),
@@ -36,7 +36,7 @@ public class AuthenticationTokenRepository {
         if (domain.getToken() == null) {
             throw new TokenException("Token invalid");
         }
-        template.update("INSERT INTO auth_tokens (id, user_id) VALUES (:id, :userId);",
+        template.update("INSERT INTO authentication_tokens (id, user_id) VALUES (:id, :userId);",
                 Map.of("id", domain.getToken(),
                         "userId", domain.getUserId()));
     }

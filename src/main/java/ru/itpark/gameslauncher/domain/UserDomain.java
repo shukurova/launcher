@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 
 @Data
@@ -22,4 +23,5 @@ public class UserDomain implements UserDetails {
     boolean accountNonLocked;
     boolean credentialsNonExpired;
     boolean enabled;
+    private LocalDateTime created;
 }

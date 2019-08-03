@@ -1,6 +1,7 @@
 package ru.itpark.gameslauncher.rest;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -8,6 +9,7 @@ import ru.itpark.gameslauncher.domain.UserDomain;
 import ru.itpark.gameslauncher.domain.game.GameDomain;
 import ru.itpark.gameslauncher.dto.GameRequestDto;
 import ru.itpark.gameslauncher.dto.GameResponseDto;
+import ru.itpark.gameslauncher.dto.ReturnedGameResponseDto;
 import ru.itpark.gameslauncher.exception.GameNotFoundException;
 import ru.itpark.gameslauncher.service.GameService;
 
@@ -50,9 +52,14 @@ public class GameRestController {
 
     @PostMapping("/not-approved/{id}/approve")
     @PreAuthorize("hasRole('ADMIN')")
+    @ResponseStatus(HttpStatus.OK)
     public void approve(@PathVariable long id) {
         gameService.approve(id);
     }
 
-    //TODO: возвращение записи игры разработчику
+    @PostMapping("/not-approved/{id}/return")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ReturnedGameResponseDto returnGame(@PathVariable long id, @AuthenticationPrincipal UserDomain user, String comment) {
+        return gameService.returnGame(id, user, comment);
+    }
 }

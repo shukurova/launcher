@@ -36,7 +36,8 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .addFilterAfter(tokenAuthenticationFilter, BasicAuthenticationFilter.class)
                 .authorizeRequests()
                 .antMatchers("/api/authentication", "/api/authentication/confirm").anonymous()
-                .antMatchers("/api/registration", "/api/registration/confirm").anonymous()
+                .antMatchers("/api/registration/request-new-token").anonymous()
+                .antMatchers("/api/registration",  "/api/registration/confirm").anonymous()
                 .antMatchers("/api/**").authenticated();
     }
 

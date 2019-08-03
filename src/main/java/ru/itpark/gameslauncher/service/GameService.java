@@ -7,9 +7,15 @@ import ru.itpark.gameslauncher.domain.UserDomain;
 import ru.itpark.gameslauncher.domain.game.GameDomain;
 import ru.itpark.gameslauncher.dto.GameRequestDto;
 import ru.itpark.gameslauncher.dto.GameResponseDto;
+import ru.itpark.gameslauncher.dto.ReturnedGameResponseDto;
+import ru.itpark.gameslauncher.dto.UserResponseDto;
+import ru.itpark.gameslauncher.exception.CompanyNotFoundException;
 import ru.itpark.gameslauncher.exception.GameAlreadyExistsException;
 import ru.itpark.gameslauncher.exception.GameNotFoundException;
+import ru.itpark.gameslauncher.repository.CompanyRepository;
+import ru.itpark.gameslauncher.repository.DeveloperRepository;
 import ru.itpark.gameslauncher.repository.GameRepository;
+import ru.itpark.gameslauncher.repository.UserRepository;
 
 import java.util.List;
 import java.util.Optional;
@@ -19,6 +25,8 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class GameService {
     private final GameRepository gameRepository;
+    private final DeveloperRepository developerRepository;
+    private final EmailService emailService;
 
     public List<GameResponseDto> getAll() {
         return gameRepository.getAll();
@@ -38,8 +46,13 @@ public class GameService {
 
     public Optional<GameDomain> create(GameRequestDto dto, UserDomain user) {
         if (gameRepository.existsByName(dto.getName())) {
-            throw new GameAlreadyExistsException(String.format("Game with this name %s already exists!", dto.getName()));
+            throw new GameAlreadyExistsException(
+                    String.format("Game with this name %s already exists!", dto.getName()));
         }
+
+        var company = developerRepository
+                .getCompanyByUserId(user.getId())
+                .orElseThrow(() -> new CompanyNotFoundException("Not found company for this user!"));
 
         var game = new GameDomain(
                 0L,
@@ -47,11 +60,12 @@ public class GameService {
                 dto.getReleaseDate(),
                 dto.getContent(),
                 dto.getCoverage(),
-                user.getId(),
+                company.getId(),
                 dto.getStatus(),
                 dto.getGenre(),
                 0,
                 0,
+                false,
                 false
         );
 
@@ -60,5 +74,17 @@ public class GameService {
 
     public void approve(long id) {
         gameRepository.approve(id);
+    }
+
+    public ReturnedGameResponseDto returnGame(long id, UserDomain user, String comment) {
+        var userEmail = user.getEmail();
+        var game = gameRepository.findNotApprovedById(id)
+                        .orElseThrow(() -> new GameNotFoundException("Game not found!"));
+
+//        emailService.sendSimpleMessage(
+//                userEmail,
+//                "Edit your record",
+//                String.format("Please, check your game record. You need to edit your game.\n %s", comment));
+        return gameRepository.returnGame(id, game.getCompanyId(), comment);
     }
 }

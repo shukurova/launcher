@@ -1,11 +1,14 @@
 package ru.itpark.gameslauncher.rest;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import ru.itpark.gameslauncher.dto.AuthenticationTokenResponseDto;
 import ru.itpark.gameslauncher.dto.RegistrationConfirmationRequestDto;
 import ru.itpark.gameslauncher.dto.RegistrationRequestDto;
+import ru.itpark.gameslauncher.dto.RegistrationTokenResponseDto;
 import ru.itpark.gameslauncher.service.RegistrationService;
 
 @RestController
@@ -15,9 +18,8 @@ public class RegistrationRestController {
     private final RegistrationService service;
 
     @PostMapping
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void register(@RequestBody RegistrationRequestDto dto) {
-        service.register(dto);
+    public RegistrationTokenResponseDto register(@RequestBody RegistrationRequestDto dto) {
+        return service.register(dto);
     }
 
     @PostMapping("/confirm")
@@ -25,5 +27,8 @@ public class RegistrationRestController {
         return service.confirm(dto);
     }
 
-    //TODO: продумать повторную отправку токена
+    @PostMapping("/request-new-token")
+    public RegistrationTokenResponseDto requestNewToken(@RequestBody RegistrationRequestDto dto) {
+        return service.requestNewToken(dto);
+    }
 }
