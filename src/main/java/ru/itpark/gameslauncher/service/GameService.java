@@ -5,10 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.itpark.gameslauncher.domain.UserDomain;
 import ru.itpark.gameslauncher.domain.game.GameDomain;
-import ru.itpark.gameslauncher.dto.GameRequestDto;
-import ru.itpark.gameslauncher.dto.GameResponseDto;
-import ru.itpark.gameslauncher.dto.ReturnedGameResponseDto;
-import ru.itpark.gameslauncher.dto.UserResponseDto;
+import ru.itpark.gameslauncher.dto.*;
 import ru.itpark.gameslauncher.exception.CompanyNotFoundException;
 import ru.itpark.gameslauncher.exception.GameAlreadyExistsException;
 import ru.itpark.gameslauncher.exception.GameNotFoundException;
@@ -76,15 +73,40 @@ public class GameService {
         gameRepository.approve(id);
     }
 
-    public ReturnedGameResponseDto returnGame(long id, UserDomain user, String comment) {
+    public ReturnedGameResponseDto returnGame(long id, UserDomain user, ReturnedGameRequestDto dto) {
         var userEmail = user.getEmail();
         var game = gameRepository.findNotApprovedById(id)
-                        .orElseThrow(() -> new GameNotFoundException("Game not found!"));
+                .orElseThrow(() -> new GameNotFoundException("Game not found!"));
 
 //        emailService.sendSimpleMessage(
 //                userEmail,
 //                "Edit your record",
 //                String.format("Please, check your game record. You need to edit your game.\n %s", comment));
-        return gameRepository.returnGame(id, game.getCompanyId(), comment);
+        return gameRepository.returnGame(id, game.getCompanyId(), dto.getComment());
+    }
+
+    public Optional<GameDomain> edit(long id,
+                                     GameRequestDto dto,
+                                     UserDomain user) {
+        if (gameRepository.existsByName(dto.getName())) {
+            throw new GameAlreadyExistsException(
+                    String.format("Game with this name %s already exists!", dto.getName()));
+        }
+
+        var company = developerRepository
+                .getCompanyByUserId(user.getId())
+                .orElseThrow(() -> new CompanyNotFoundException("Not found company for this user!"));
+        var game = new GameEditRequestDto(
+                id,
+                dto.getName(),
+                dto.getReleaseDate(),
+                dto.getContent(),
+                dto.getCoverage(),
+                company.getId(),
+                dto.getStatus(),
+                dto.getGenre()
+        );
+
+        return gameRepository.edit(game);
     }
 }

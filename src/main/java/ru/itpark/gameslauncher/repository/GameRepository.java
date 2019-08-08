@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 import ru.itpark.gameslauncher.domain.game.GameDomain;
 import ru.itpark.gameslauncher.domain.game.GameGenre;
 import ru.itpark.gameslauncher.domain.game.GameStatus;
+import ru.itpark.gameslauncher.dto.GameEditRequestDto;
 import ru.itpark.gameslauncher.dto.GameResponseDto;
 import ru.itpark.gameslauncher.dto.ReturnedGameResponseDto;
 import ru.itpark.gameslauncher.exception.GameNotFoundException;
@@ -121,7 +122,7 @@ public class GameRepository {
     }
 
     private ReturnedGameResponseDto findNotApprovedGameWithCommentById(long gameId) {
-        return template.queryForObject("SELECT g.id, g.name, g.release_date, g.content, g.coverage, g.company_id, g.status, g.genre, rgc.comment FROM games g JOIN returned_games_comments rgc WHERE g.id = :id AND rgc.game_id = :id",
+        return template.queryForObject("SELECT g.id, g.name, g.release_date, g.content, g.coverage, g.company_id, g.status, g.genre, rgc.comment FROM games g JOIN returned_games_comments rgc ON g.id = rgc.game_id AND g.returned = TRUE AND rgc.game_id = :id",
                 Map.of("id", gameId),
                 (rs, i) -> new ReturnedGameResponseDto(
                         rs.getLong("id"),
@@ -136,13 +137,31 @@ public class GameRepository {
                 ));
     }
 
-    //TODO: почему comment == null
-    public ReturnedGameResponseDto returnGame(long id, long companyId, String comment) {
+    public ReturnedGameResponseDto returnGame(long id,
+                                              long companyId,
+                                              String comment) {
         template.update("INSERT INTO returned_games_comments (game_id, company_id, comment) VALUES (:id, :companyId, :comment)",
                 new MapSqlParameterSource(
                         Map.of("id", id,
                                 "companyId", companyId,
                                 "comment", comment)));
+
+        template.update("UPDATE games set returned = true where id = :id",
+                Map.of("id", id));
         return findNotApprovedGameWithCommentById(id);
+    }
+
+    //TODO: корректно вернуть игру после обновления информации
+    public Optional<GameDomain> edit(GameEditRequestDto dto) {
+        template.update("UPDATE games SET name = :name, release_date = :releaseDate, content = :content, coverage = :coverage, status = :status, genre = :genre WHERE id = :id",
+                Map.of("name", dto.getName(),
+                        "releaseDate", dto.getReleaseDate(),
+                        "content", dto.getContent(),
+                        "coverage", dto.getCoverage(),
+                        "companyId", dto.getCompanyId(),
+                        "status", dto.getStatus().getIndex(),
+                        "genre", dto.getGenre().getIndex(),
+                        "id", dto.getId()));
+        return findById(dto.getId());
     }
 }

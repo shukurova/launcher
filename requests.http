@@ -35,7 +35,7 @@ POST http://localhost:8080/api/authentication
 Content-Type: application/json
 
 {
-  "username": "admin",
+  "username": "katya",
   "password": "password"
 }
 
@@ -99,7 +99,7 @@ X-Token: {{auth_token}}
 
 {
   "name": "Test Game 3",
-  "releaseDate": "2032-01-22",
+  "releaseDate": "2022-01-22",
   "content": "Test Game content 2",
   "coverage": "test-cover.png",
   "status": "TODO",
@@ -127,5 +127,20 @@ client.test("Request executed successfully", function() {
   client.assert(response.status === 200, "Response status is not 200");
 });
 %}
+
+###
+
+POST http://localhost:8080/api/games/21/edit
+Content-Type: application/json
+X-Token: {{auth_token}}
+
+{
+  "name": "Test Game 3",
+  "releaseDate": "2022-01-22",
+  "content": "Test Game content 2",
+  "coverage": "test-cover.png",
+  "status": "TODO",
+  "genre": "RPG"
+}
 
 ###

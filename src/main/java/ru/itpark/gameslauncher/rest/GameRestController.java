@@ -9,6 +9,7 @@ import ru.itpark.gameslauncher.domain.UserDomain;
 import ru.itpark.gameslauncher.domain.game.GameDomain;
 import ru.itpark.gameslauncher.dto.GameRequestDto;
 import ru.itpark.gameslauncher.dto.GameResponseDto;
+import ru.itpark.gameslauncher.dto.ReturnedGameRequestDto;
 import ru.itpark.gameslauncher.dto.ReturnedGameResponseDto;
 import ru.itpark.gameslauncher.exception.GameNotFoundException;
 import ru.itpark.gameslauncher.service.GameService;
@@ -46,7 +47,8 @@ public class GameRestController {
 
     @PostMapping
     @PreAuthorize("hasRole('DEVELOPER')")
-    public Optional<GameDomain> create(@RequestBody GameRequestDto dto, @AuthenticationPrincipal UserDomain user) {
+    public Optional<GameDomain> create(@RequestBody GameRequestDto dto,
+                                       @AuthenticationPrincipal UserDomain user) {
         return gameService.create(dto, user);
     }
 
@@ -59,7 +61,17 @@ public class GameRestController {
 
     @PostMapping("/not-approved/{id}/return")
     @PreAuthorize("hasRole('ADMIN')")
-    public ReturnedGameResponseDto returnGame(@PathVariable long id, @AuthenticationPrincipal UserDomain user, String comment) {
-        return gameService.returnGame(id, user, comment);
+    public ReturnedGameResponseDto returnGame(@PathVariable long id,
+                                              @AuthenticationPrincipal UserDomain user,
+                                              @RequestBody ReturnedGameRequestDto dto) {
+        return gameService.returnGame(id, user, dto);
+    }
+
+    @PostMapping("/{id}/edit")
+    @PreAuthorize("hasRole('DEVELOPER')")
+    public Optional<GameDomain> edit(@PathVariable long id,
+                                     @RequestBody GameRequestDto dto,
+                                     @AuthenticationPrincipal UserDomain user) {
+        return gameService.edit(id, dto, user);
     }
 }
