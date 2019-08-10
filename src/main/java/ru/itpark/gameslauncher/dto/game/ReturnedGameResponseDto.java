@@ -1,4 +1,4 @@
-package ru.itpark.gameslauncher.dto;
+package ru.itpark.gameslauncher.dto.game;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -17,7 +17,7 @@ public class ReturnedGameResponseDto {
     private LocalDate releaseDate;
     private String content;
     private String coverage;
-    private long companyId;
+    private String companyName;
     private GameStatus status;
     private GameGenre genre;
     private String comment;

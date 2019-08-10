@@ -1,4 +1,4 @@
-package ru.itpark.gameslauncher.dto;
+package ru.itpark.gameslauncher.dto.user;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -11,13 +11,18 @@ import java.time.LocalDate;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class GameEditRequestDto {
+public class UserGameResponseDto {
     private long id;
     private String name;
     private LocalDate releaseDate;
     private String content;
     private String coverage;
-    private long companyId;
+    private String companyName;
     private GameStatus status;
     private GameGenre genre;
+    private int likes;
+    private int dislikes;
+    private boolean approved;
+    private boolean returned;
+
 }

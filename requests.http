@@ -81,7 +81,18 @@ client.test("Request executed successfully", function() {
 
 ###
 
-POST http://localhost:8080/api/games/not-approved/11/approve
+GET http://localhost:8080/api/games/not-approved/24
+X-Token: {{auth_token}}
+
+> {%
+client.test("Request executed successfully", function() {
+  client.assert(response.status === 200, "Response status is not 200");
+});
+%}
+
+###
+
+POST http://localhost:8080/api/games/not-approved/21/approve
 Content-Type: application/json
 X-Token: {{auth_token}}
 
@@ -114,7 +125,7 @@ client.test("Request executed successfully", function() {
 
 ###
 
-POST http://localhost:8080/api/games/not-approved/21/return
+POST http://localhost:8080/api/games/not-approved/24/return
 Content-Type: application/json
 X-Token: {{auth_token}}
 
@@ -135,7 +146,34 @@ Content-Type: application/json
 X-Token: {{auth_token}}
 
 {
-  "name": "Test Game 3",
+  "name": "Test Game Edit One More Time",
+  "releaseDate": "2022-01-22",
+  "content": "Test Game content 2",
+  "coverage": "test-cover.png",
+  "status": "TODO",
+  "genre": "RPG"
+}
+
+###
+
+GET http://localhost:8080/api/profile
+Content-Type: application/json
+X-Token: {{auth_token}}
+
+###
+
+GET http://localhost:8080/api/profile/24
+Content-Type: application/json
+X-Token: {{auth_token}}
+
+###
+
+POST http://localhost:8080/api/profile/24/edit
+Content-Type: application/json
+X-Token: {{auth_token}}
+
+{
+  "name": "Test Game Edit One More Time Aaaaand From Profile",
   "releaseDate": "2022-01-22",
   "content": "Test Game content 2",
   "coverage": "test-cover.png",

@@ -1,4 +1,4 @@
-package ru.itpark.gameslauncher.dto;
+package ru.itpark.gameslauncher.dto.game;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -7,6 +7,6 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class RegistrationConfirmationRequestDto {
-  private String token;
+public class ReturnedGameRequestDto {
+    private String comment;
 }

@@ -5,14 +5,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.itpark.gameslauncher.domain.UserDomain;
 import ru.itpark.gameslauncher.domain.game.GameDomain;
-import ru.itpark.gameslauncher.dto.*;
+import ru.itpark.gameslauncher.dto.game.*;
 import ru.itpark.gameslauncher.exception.CompanyNotFoundException;
 import ru.itpark.gameslauncher.exception.GameAlreadyExistsException;
 import ru.itpark.gameslauncher.exception.GameNotFoundException;
-import ru.itpark.gameslauncher.repository.CompanyRepository;
 import ru.itpark.gameslauncher.repository.DeveloperRepository;
 import ru.itpark.gameslauncher.repository.GameRepository;
-import ru.itpark.gameslauncher.repository.UserRepository;
 
 import java.util.List;
 import java.util.Optional;
@@ -25,19 +23,19 @@ public class GameService {
     private final DeveloperRepository developerRepository;
     private final EmailService emailService;
 
-    public List<GameResponseDto> getAll() {
+    public List<GameCondensedResponseDto> getAll() {
         return gameRepository.getAll();
     }
 
-    public List<GameResponseDto> getNotApproved() {
+    public List<GameCondensedResponseDto> getNotApproved() {
         return gameRepository.getNotApproved();
     }
 
-    public Optional<GameDomain> findById(long id) {
-        return gameRepository.findById(id);
+    public Optional<GameResponseDto> findById(long id) {
+        return gameRepository.findApprovedById(id);
     }
 
-    public Optional<GameDomain> findNotApprovedById(long id) {
+    public Optional<NotApprovedGameResponseDto> findNotApprovedById(long id) {
         return gameRepository.findNotApprovedById(id);
     }
 
@@ -82,27 +80,22 @@ public class GameService {
 //                userEmail,
 //                "Edit your record",
 //                String.format("Please, check your game record. You need to edit your game.\n %s", comment));
-        return gameRepository.returnGame(id, game.getCompanyId(), dto.getComment());
+        return gameRepository.returnGame(id, game.getCompanyName(), dto.getComment());
     }
 
-    public Optional<GameDomain> edit(long id,
-                                     GameRequestDto dto,
-                                     UserDomain user) {
+    public Optional<GameResponseDto> edit(long id,
+                                     GameRequestDto dto) {
         if (gameRepository.existsByName(dto.getName())) {
             throw new GameAlreadyExistsException(
                     String.format("Game with this name %s already exists!", dto.getName()));
         }
 
-        var company = developerRepository
-                .getCompanyByUserId(user.getId())
-                .orElseThrow(() -> new CompanyNotFoundException("Not found company for this user!"));
         var game = new GameEditRequestDto(
                 id,
                 dto.getName(),
                 dto.getReleaseDate(),
                 dto.getContent(),
                 dto.getCoverage(),
-                company.getId(),
                 dto.getStatus(),
                 dto.getGenre()
         );

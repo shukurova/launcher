@@ -7,11 +7,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import ru.itpark.gameslauncher.domain.UserDomain;
 import ru.itpark.gameslauncher.domain.game.GameDomain;
-import ru.itpark.gameslauncher.dto.GameRequestDto;
-import ru.itpark.gameslauncher.dto.GameResponseDto;
-import ru.itpark.gameslauncher.dto.ReturnedGameRequestDto;
-import ru.itpark.gameslauncher.dto.ReturnedGameResponseDto;
-import ru.itpark.gameslauncher.exception.GameNotFoundException;
+import ru.itpark.gameslauncher.dto.game.*;
 import ru.itpark.gameslauncher.service.GameService;
 
 import java.util.List;
@@ -24,24 +20,24 @@ public class GameRestController {
     private final GameService gameService;
 
     @GetMapping
-    public List<GameResponseDto> getAll() {
+    public List<GameCondensedResponseDto> getAll() {
         return gameService.getAll();
     }
 
     @GetMapping("/not-approved")
     @PreAuthorize("hasRole('ADMIN')")
-    public List<GameResponseDto> getNotApproved() {
+    public List<GameCondensedResponseDto> getNotApproved() {
         return gameService.getNotApproved();
     }
 
     @GetMapping("/{id}")
-    public Optional<GameDomain> findById(@PathVariable long id) {
+    public Optional<GameResponseDto> findById(@PathVariable long id) {
         return gameService.findById(id);
     }
 
     @GetMapping("/not-approved/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public Optional<GameDomain> findNotApprovedById(@PathVariable long id) {
+    public Optional<NotApprovedGameResponseDto> findNotApprovedById(@PathVariable long id) {
         return gameService.findNotApprovedById(id);
     }
 
@@ -68,10 +64,10 @@ public class GameRestController {
     }
 
     @PostMapping("/{id}/edit")
-    @PreAuthorize("hasRole('DEVELOPER')")
-    public Optional<GameDomain> edit(@PathVariable long id,
-                                     @RequestBody GameRequestDto dto,
-                                     @AuthenticationPrincipal UserDomain user) {
-        return gameService.edit(id, dto, user);
+    @PreAuthorize("@permissionService.isGameDeveloper(#id, #user.id)")
+    public Optional<GameResponseDto> edit(@PathVariable long id,
+                                          @RequestBody GameRequestDto dto,
+                                          @AuthenticationPrincipal UserDomain user) {
+        return gameService.edit(id, dto);
     }
 }

@@ -1,4 +1,4 @@
-package ru.itpark.gameslauncher.dto;
+package ru.itpark.gameslauncher.dto.user;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -7,9 +7,9 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class RegistrationRequestDto {
+public class UserResponseDto {
+    private long id;
     private String name;
     private String username;
-    private String password;
     private String email;
 }
