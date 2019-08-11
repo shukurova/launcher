@@ -23,24 +23,32 @@ public class GameService {
     private final DeveloperRepository developerRepository;
     private final EmailService emailService;
 
-    public List<GameCondensedResponseDto> getAll() {
-        return gameRepository.getAll();
+    public List<GameCondensedResponseDto> getAllApproved() {
+        return gameRepository.getAllApproved();
     }
 
-    public List<GameCondensedResponseDto> getNotApproved() {
-        return gameRepository.getNotApproved();
-    }
-
-    public Optional<GameResponseDto> findById(long id) {
+    public Optional<GameResponseDto> findApprovedById(long id) {
         return gameRepository.findApprovedById(id);
+    }
+
+    public List<GameCondensedResponseDto> getAllNotApproved() {
+        return gameRepository.getAllNotApproved();
     }
 
     public Optional<NotApprovedGameResponseDto> findNotApprovedById(long id) {
         return gameRepository.findNotApprovedById(id);
     }
 
-    public Optional<GameDomain> create(GameRequestDto dto, UserDomain user) {
-        if (gameRepository.existsByName(dto.getName())) {
+    public List<GameCondensedResponseDto> getAllReturned() {
+        return gameRepository.getAllReturned();
+    }
+
+    public Optional<NotApprovedGameResponseDto> findReturnedById(long id) {
+        return gameRepository.findReturnedById(id);
+    }
+
+    public Optional<GameDomain> createGame(GameRequestDto dto, UserDomain user) {
+        if (gameRepository.checkExistsByName(dto.getName())) {
             throw new GameAlreadyExistsException(
                     String.format("Game with this name %s already exists!", dto.getName()));
         }
@@ -64,11 +72,11 @@ public class GameService {
                 false
         );
 
-        return gameRepository.create(game);
+        return gameRepository.createGame(game);
     }
 
-    public void approve(long id) {
-        gameRepository.approve(id);
+    public void approveGame(long id) {
+        gameRepository.approveGame(id);
     }
 
     public ReturnedGameResponseDto returnGame(long id, UserDomain user, ReturnedGameRequestDto dto) {
@@ -80,12 +88,14 @@ public class GameService {
 //                userEmail,
 //                "Edit your record",
 //                String.format("Please, check your game record. You need to edit your game.\n %s", comment));
-        return gameRepository.returnGame(id, game.getCompanyName(), dto.getComment());
+        gameRepository.returnGame(id, game.getCompanyName(), dto.getComment());
+
+        return gameRepository.findNotApprovedGameWithCommentById(id);
     }
 
-    public Optional<GameResponseDto> edit(long id,
-                                     GameRequestDto dto) {
-        if (gameRepository.existsByName(dto.getName())) {
+    public Optional<GameResponseDto> editGame(long id,
+                                              GameRequestDto dto) {
+        if (gameRepository.checkExistsByName(dto.getName())) {
             throw new GameAlreadyExistsException(
                     String.format("Game with this name %s already exists!", dto.getName()));
         }
@@ -100,6 +110,8 @@ public class GameService {
                 dto.getGenre()
         );
 
-        return gameRepository.edit(game);
+        gameRepository.editGame(game);
+
+        return gameRepository.findById(game.getId());
     }
 }

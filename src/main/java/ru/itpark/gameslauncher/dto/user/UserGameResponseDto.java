@@ -24,5 +24,4 @@ public class UserGameResponseDto {
     private int dislikes;
     private boolean approved;
     private boolean returned;
-
 }

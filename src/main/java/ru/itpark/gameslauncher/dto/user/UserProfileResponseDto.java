@@ -4,11 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
-import ru.itpark.gameslauncher.dto.game.GameCondensedResponseDto;
 
 import java.time.LocalDate;
 import java.util.Collection;
-import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -20,5 +18,4 @@ public class UserProfileResponseDto {
     private String email;
     private Collection<? extends GrantedAuthority> authorities;
     private LocalDate created;
-    private List<GameCondensedResponseDto> games;
 }

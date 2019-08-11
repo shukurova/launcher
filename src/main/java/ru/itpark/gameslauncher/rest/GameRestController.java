@@ -20,19 +20,19 @@ public class GameRestController {
     private final GameService gameService;
 
     @GetMapping
-    public List<GameCondensedResponseDto> getAll() {
-        return gameService.getAll();
+    public List<GameCondensedResponseDto> getAllApproved() {
+        return gameService.getAllApproved();
+    }
+
+    @GetMapping("/{id}")
+    public Optional<GameResponseDto> findApprovedById(@PathVariable long id) {
+        return gameService.findApprovedById(id);
     }
 
     @GetMapping("/not-approved")
     @PreAuthorize("hasRole('ADMIN')")
-    public List<GameCondensedResponseDto> getNotApproved() {
-        return gameService.getNotApproved();
-    }
-
-    @GetMapping("/{id}")
-    public Optional<GameResponseDto> findById(@PathVariable long id) {
-        return gameService.findById(id);
+    public List<GameCondensedResponseDto> getAllNotApproved() {
+        return gameService.getAllNotApproved();
     }
 
     @GetMapping("/not-approved/{id}")
@@ -41,18 +41,30 @@ public class GameRestController {
         return gameService.findNotApprovedById(id);
     }
 
+    @GetMapping("/returned")
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<GameCondensedResponseDto> getAllReturned() {
+        return gameService.getAllReturned();
+    }
+
+    @GetMapping("/returned/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public Optional<NotApprovedGameResponseDto> findReturnedById(@PathVariable long id) {
+        return gameService.findReturnedById(id);
+    }
+
     @PostMapping
     @PreAuthorize("hasRole('DEVELOPER')")
-    public Optional<GameDomain> create(@RequestBody GameRequestDto dto,
-                                       @AuthenticationPrincipal UserDomain user) {
-        return gameService.create(dto, user);
+    public Optional<GameDomain> createGame(@RequestBody GameRequestDto dto,
+                                           @AuthenticationPrincipal UserDomain user) {
+        return gameService.createGame(dto, user);
     }
 
     @PostMapping("/not-approved/{id}/approve")
     @PreAuthorize("hasRole('ADMIN')")
     @ResponseStatus(HttpStatus.OK)
     public void approve(@PathVariable long id) {
-        gameService.approve(id);
+        gameService.approveGame(id);
     }
 
     @PostMapping("/not-approved/{id}/return")
@@ -65,9 +77,9 @@ public class GameRestController {
 
     @PostMapping("/{id}/edit")
     @PreAuthorize("@permissionService.isGameDeveloper(#id, #user.id)")
-    public Optional<GameResponseDto> edit(@PathVariable long id,
-                                          @RequestBody GameRequestDto dto,
-                                          @AuthenticationPrincipal UserDomain user) {
-        return gameService.edit(id, dto);
+    public Optional<GameResponseDto> editGame(@PathVariable long id,
+                                              @RequestBody GameRequestDto dto,
+                                              @AuthenticationPrincipal UserDomain user) {
+        return gameService.editGame(id, dto);
     }
 }

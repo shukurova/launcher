@@ -38,7 +38,9 @@ CREATE TABLE companies
     name          TEXT NOT NULL UNIQUE,
     country       TEXT NOT NULL,
     content       TEXT NOT NULL,
-    creation_date DATE NOT NULL
+    creation_date DATE NOT NULL,
+    approved     BOOlEAN NOT NULL DEFAULT FALSE,
+    returned     BOOlEAN NOT NULL DEFAULT FALSE
 );
 
 CREATE TABLE games

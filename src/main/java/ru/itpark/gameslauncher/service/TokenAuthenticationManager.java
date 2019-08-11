@@ -25,8 +25,8 @@ public class TokenAuthenticationManager implements AuthenticationManager {
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         var token = (String) authentication.getPrincipal();
 
-        var tokenDomain = authenticationTokenRepository.findByToken(token).orElseThrow(() -> new TokenException("Invalid token"));
-        var userDomain = userRepository.findById(tokenDomain.getUserId()).orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        var tokenDomain = authenticationTokenRepository.findByToken(token).orElseThrow(() -> new TokenException("Invalid token!"));
+        var userDomain = userRepository.findById(tokenDomain.getUserId()).orElseThrow(() -> new UsernameNotFoundException("User not found!"));
 
         checker.check(userDomain);
 

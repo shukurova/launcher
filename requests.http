@@ -59,7 +59,7 @@ client.test("Request executed successfully", function() {
 
 ###
 
-GET http://localhost:8080/api/games/21
+GET http://localhost:8080/api/games/2
 X-Token: {{auth_token}}
 
 > {%
@@ -94,6 +94,17 @@ client.test("Request executed successfully", function() {
 
 POST http://localhost:8080/api/games/not-approved/21/approve
 Content-Type: application/json
+X-Token: {{auth_token}}
+
+> {%
+client.test("Request executed successfully", function() {
+  client.assert(response.status === 200, "Response status is not 200");
+});
+%}
+
+###
+
+GET http://localhost:8080/api/games/returned
 X-Token: {{auth_token}}
 
 > {%
@@ -141,17 +152,17 @@ client.test("Request executed successfully", function() {
 
 ###
 
-POST http://localhost:8080/api/games/21/edit
+POST http://localhost:8080/api/games/2/edit
 Content-Type: application/json
 X-Token: {{auth_token}}
 
 {
-  "name": "Test Game Edit One More Time",
-  "releaseDate": "2022-01-22",
-  "content": "Test Game content 2",
-  "coverage": "test-cover.png",
-  "status": "TODO",
-  "genre": "RPG"
+  "name": "The Void 2",
+  "releaseDate": "2020-03-09",
+  "content": "The player takes on the role of a lost soul that accidentally lingers in a place called \"the Void\" before meeting its absolute death.",
+  "coverage": "empty-coverage.png",
+  "status": "IN_PROGRESS",
+  "genre": "ADVENTURE"
 }
 
 ###
@@ -162,18 +173,24 @@ X-Token: {{auth_token}}
 
 ###
 
-GET http://localhost:8080/api/profile/24
+GET http://localhost:8080/api/profile/games
 Content-Type: application/json
 X-Token: {{auth_token}}
 
 ###
 
-POST http://localhost:8080/api/profile/24/edit
+GET http://localhost:8080/api/profile/games/2
+Content-Type: application/json
+X-Token: {{auth_token}}
+
+###
+
+POST http://localhost:8080/api/profile/games/24/edit
 Content-Type: application/json
 X-Token: {{auth_token}}
 
 {
-  "name": "Test Game Edit One More Time Aaaaand From Profile",
+  "name": "Test Game Edit From Profile",
   "releaseDate": "2022-01-22",
   "content": "Test Game content 2",
   "coverage": "test-cover.png",
