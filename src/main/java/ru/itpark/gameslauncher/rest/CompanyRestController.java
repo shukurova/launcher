@@ -54,10 +54,9 @@ public class CompanyRestController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('DEVELOPER')")
-    public Optional<CompanyDomain> createCompany(@RequestBody CompanyRequestDto dto,
-                                                 @AuthenticationPrincipal UserDomain user) {
-        return companyService.createCompany(dto, user);
+    @PreAuthorize("hasRole('USER')")
+    public Optional<CompanyDomain> createCompany(@RequestBody CompanyRequestDto dto) {
+        return companyService.createCompany(dto);
     }
 
     @PostMapping("/not-approved/{id}/approve")
@@ -70,16 +69,14 @@ public class CompanyRestController {
     @PostMapping("/not-approved/{id}/return")
     @PreAuthorize("hasRole('ADMIN')")
     public ReturnedCompanyResponseDto returnCompany(@PathVariable long id,
-                                                    @AuthenticationPrincipal UserDomain user,
                                                     @RequestBody ReturnedCompanyRequestDto dto) {
-        return companyService.returnCompany(id, user, dto);
+        return companyService.returnCompany(id, dto);
     }
 
     @PostMapping("/{id}/edit")
-    @PreAuthorize("@permissionService.isGameDeveloper(#id, #user.id)")
+    @PreAuthorize("hasRole('ADMIN')")
     public Optional<CompanyResponseDto> editCompany(@PathVariable long id,
-                                                    @RequestBody CompanyRequestDto dto,
-                                                    @AuthenticationPrincipal UserDomain user) {
+                                                    @RequestBody CompanyRequestDto dto) {
         return companyService.editCompany(id, dto);
     }
 }

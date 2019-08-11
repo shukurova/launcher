@@ -79,8 +79,11 @@ public class GameService {
         gameRepository.approveGame(id);
     }
 
-    public ReturnedGameResponseDto returnGame(long id, UserDomain user, ReturnedGameRequestDto dto) {
-        var userEmail = user.getEmail();
+    //TODO: нахрена я здесь беру ID админа? Если мне нужен ID того, кто создал игру
+    //TODO: вытащить e-mail создателя игры
+    public ReturnedGameResponseDto returnGame(long id,
+                                              ReturnedGameRequestDto dto) {
+
         var game = gameRepository.findNotApprovedById(id)
                 .orElseThrow(() -> new GameNotFoundException("Game not found!"));
 

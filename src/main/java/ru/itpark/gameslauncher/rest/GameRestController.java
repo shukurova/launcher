@@ -70,16 +70,14 @@ public class GameRestController {
     @PostMapping("/not-approved/{id}/return")
     @PreAuthorize("hasRole('ADMIN')")
     public ReturnedGameResponseDto returnGame(@PathVariable long id,
-                                              @AuthenticationPrincipal UserDomain user,
                                               @RequestBody ReturnedGameRequestDto dto) {
-        return gameService.returnGame(id, user, dto);
+        return gameService.returnGame(id, dto);
     }
 
     @PostMapping("/{id}/edit")
-    @PreAuthorize("@permissionService.isGameDeveloper(#id, #user.id)")
+    @PreAuthorize("hasRole('ADMIN')")
     public Optional<GameResponseDto> editGame(@PathVariable long id,
-                                              @RequestBody GameRequestDto dto,
-                                              @AuthenticationPrincipal UserDomain user) {
+                                              @RequestBody GameRequestDto dto) {
         return gameService.editGame(id, dto);
     }
 }

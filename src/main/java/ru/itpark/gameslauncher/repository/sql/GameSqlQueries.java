@@ -11,22 +11,20 @@ public interface GameSqlQueries {
     String GET_APPROVED_BY_ID =
             "SELECT g.id, g.name, g.release_date, g.content, g.coverage, c.name as company_name, g.status, g.genre, g.likes, g.dislikes FROM games g JOIN companies c ON g.company_id = c.id WHERE g.id = :id AND g.approved = true;";
 
-    String GET_ALL_NOT_APPROVED =
-            "SELECT id, name, coverage FROM games WHERE approved = false AND returned = false;";
+    String GET_ALL_NOT_APPROVED_GAMES = "SELECT id, name, coverage FROM games WHERE approved = false AND returned = false;";
 
-    String GET_ALL_RETURNED =
-            "SELECT id, name, coverage FROM games WHERE approved = false AND returned = true;";
+    String GET_ALL_RETURNED_GAMES = "SELECT id, name, coverage FROM games WHERE approved = false AND returned = true;";
 
-    String GET_NOT_APPROVED_BY_ID =
+    String GET_NOT_APPROVED_GAME_BY_ID =
             "SELECT g.id, g.name, g.release_date, g.content, g.coverage, c.name as company_name, g.status, g.genre FROM games g JOIN companies c ON g.company_id = c.id WHERE g.id = :id AND g.approved = false AND g.returned = false;";
 
-    String GET_RETURNED_BY_ID =
+    String GET_RETURNED_GAME_BY_ID =
             "SELECT g.id, g.name, g.release_date, g.content, g.coverage, c.name as company_name, g.status, g.genre FROM games g JOIN companies c ON g.company_id = c.id WHERE g.id = :id AND g.approved = false AND g.returned = true;";
 
     String CREATE_GAME =
             "INSERT INTO games (name, release_date, content, coverage, company_id, status, genre) VALUES (:name, :releaseDate, :content, :coverage, :companyId, :status, :genre);";
 
-    String CHECK_EXISTS_BY_NAME = "SELECT count(id) FROM games WHERE name = :name;";
+    String CHECK_GAME_EXISTS_BY_NAME = "SELECT count(id) FROM games WHERE name = :name;";
 
     String APPROVE_GAME = "UPDATE games SET approved = true, returned = false WHERE id = :id;";
 

@@ -15,4 +15,6 @@ public class CompanyDomain {
     private String country;
     private String content;
     private LocalDate creationDate;
+    private boolean approved;
+    private boolean returned;
 }

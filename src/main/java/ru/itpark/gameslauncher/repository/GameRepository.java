@@ -81,7 +81,7 @@ public class GameRepository implements GameSqlQueries, CompanySqlQueries {
      */
     public List<GameCondensedResponseDto> getAllNotApproved() {
         return template.query(
-                GET_ALL_NOT_APPROVED,
+                GET_ALL_NOT_APPROVED_GAMES,
                 (rs, i) -> new GameCondensedResponseDto(
                         rs.getLong("id"),
                         rs.getString("name"),
@@ -96,7 +96,7 @@ public class GameRepository implements GameSqlQueries, CompanySqlQueries {
      */
     public List<GameCondensedResponseDto> getAllReturned() {
         return template.query(
-                GET_ALL_RETURNED,
+                GET_ALL_RETURNED_GAMES,
                 (rs, i) -> new GameCondensedResponseDto(
                         rs.getLong("id"),
                         rs.getString("name"),
@@ -113,7 +113,7 @@ public class GameRepository implements GameSqlQueries, CompanySqlQueries {
     public Optional<NotApprovedGameResponseDto> findNotApprovedById(long id) {
         try {
             var game = template.queryForObject(
-                    GET_NOT_APPROVED_BY_ID,
+                    GET_NOT_APPROVED_GAME_BY_ID,
                     Map.of("id", id),
                     (rs, i) -> new NotApprovedGameResponseDto(
                             rs.getLong("id"),
@@ -142,7 +142,7 @@ public class GameRepository implements GameSqlQueries, CompanySqlQueries {
     public Optional<NotApprovedGameResponseDto> findReturnedById(long id) {
         try {
             var game = template.queryForObject(
-                    GET_RETURNED_BY_ID,
+                    GET_RETURNED_GAME_BY_ID,
                     Map.of("id", id),
                     (rs, i) -> new NotApprovedGameResponseDto(
                             rs.getLong("id"),
@@ -197,13 +197,13 @@ public class GameRepository implements GameSqlQueries, CompanySqlQueries {
      * @return true, если результат поиск больше нуля
      */
     public boolean checkExistsByName(final String name) {
-        var userCount = template.queryForObject(
-                CHECK_EXISTS_BY_NAME,
+        var gameCount = template.queryForObject(
+                CHECK_GAME_EXISTS_BY_NAME,
                 Map.of("name", name),
                 Integer.class);
 
-        assert userCount != null;
-        return userCount > 0;
+        assert gameCount != null;
+        return gameCount > 0;
     }
 
     /**
