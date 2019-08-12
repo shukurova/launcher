@@ -24,4 +24,6 @@ public interface CompanySqlQueries {
     String CHECK_COMPANY_EXISTS_BY_NAME = "SELECT count(id) FROM companies WHERE name = :name;";
 
     String APPROVE_COMPANY = "UPDATE companies SET approved = true, returned = false WHERE id = :id;";
+
+    String GET_COMPANY_ID_BY_NAME = "SELECT id FROM companies WHERE name = :name;";
 }

@@ -2,10 +2,10 @@ POST http://localhost:8080/api/registration
 Content-Type: application/json
 
 {
-  "name": "Test",
-  "username": "test",
+  "name": "Dev",
+  "username": "dev",
   "password": "password",
-  "email": "test@gmail.com"
+  "email": "dev@gmail.com"
 }
 
 ###
@@ -26,7 +26,7 @@ POST http://localhost:8080/api/registration/confirm
 Content-Type: application/json
 
 {
-  "token": "ec5178df-57bd-4ba4-a2b7-05934937788f"
+  "token": "ced1b56c-a853-4b9f-8bac-791e66025a10"
 }
 
 ###
@@ -35,7 +35,7 @@ POST http://localhost:8080/api/authentication
 Content-Type: application/json
 
 {
-  "username": "katya",
+  "username": "dev",
   "password": "password"
 }
 
@@ -120,12 +120,12 @@ Content-Type: application/json
 X-Token: {{auth_token}}
 
 {
-  "name": "Test Game 3",
-  "releaseDate": "2022-01-22",
-  "content": "Test Game content 2",
+  "name": "Dark Souls 4",
+  "releaseDate": "2025-01-22",
+  "content": "Dreams about game",
   "coverage": "test-cover.png",
   "status": "TODO",
-  "genre": "RPG"
+  "genre": "ACTION"
 }
 
 > {%

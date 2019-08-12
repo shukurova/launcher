@@ -7,8 +7,10 @@ import ru.itpark.gameslauncher.domain.UserDomain;
 import ru.itpark.gameslauncher.domain.game.GameDomain;
 import ru.itpark.gameslauncher.dto.game.*;
 import ru.itpark.gameslauncher.exception.CompanyNotFoundException;
+import ru.itpark.gameslauncher.exception.EmailNotFoundException;
 import ru.itpark.gameslauncher.exception.GameAlreadyExistsException;
 import ru.itpark.gameslauncher.exception.GameNotFoundException;
+import ru.itpark.gameslauncher.repository.CompanyRepository;
 import ru.itpark.gameslauncher.repository.DeveloperRepository;
 import ru.itpark.gameslauncher.repository.GameRepository;
 
@@ -21,6 +23,7 @@ import java.util.Optional;
 public class GameService {
     private final GameRepository gameRepository;
     private final DeveloperRepository developerRepository;
+    private final CompanyRepository companyRepository;
     private final EmailService emailService;
 
     public List<GameCondensedResponseDto> getAllApproved() {
@@ -79,16 +82,18 @@ public class GameService {
         gameRepository.approveGame(id);
     }
 
-    //TODO: нахрена я здесь беру ID админа? Если мне нужен ID того, кто создал игру
-    //TODO: вытащить e-mail создателя игры
     public ReturnedGameResponseDto returnGame(long id,
                                               ReturnedGameRequestDto dto) {
-
         var game = gameRepository.findNotApprovedById(id)
                 .orElseThrow(() -> new GameNotFoundException("Game not found!"));
 
+        var companyId = companyRepository.getCompanyIdByCompanyName(game.getCompanyName());
+        List<String> emails = developerRepository
+                .getDevelopersEmailsByCompanyId(companyId)
+                .orElseThrow(() -> new EmailNotFoundException("Email not found!"));
+
 //        emailService.sendSimpleMessage(
-//                userEmail,
+//                emails,
 //                "Edit your record",
 //                String.format("Please, check your game record. You need to edit your game.\n %s", comment));
         gameRepository.returnGame(id, game.getCompanyName(), dto.getComment());

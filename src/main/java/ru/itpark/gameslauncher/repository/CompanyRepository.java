@@ -24,26 +24,32 @@ public class CompanyRepository implements CompanySqlQueries {
      *
      * @return список компаний
      */
-    public List<CompanyCondensedResponseDto> getAllApproved() {
-        return template.query(
-                GET_ALL_APPROVED_COMPANIES,
-                (rs, i) -> new CompanyCondensedResponseDto(
-                        rs.getLong("id"),
-                        rs.getString("name")
-                ));
+    public Optional<List<CompanyCondensedResponseDto>> getAllApproved() {
+        try {
+            var companies = template.query(
+                    GET_ALL_APPROVED_COMPANIES,
+                    (rs, i) -> new CompanyCondensedResponseDto(
+                            rs.getLong("id"),
+                            rs.getString("name")
+                    ));
+            return Optional.ofNullable(companies);
+        } catch (
+                EmptyResultDataAccessException e) {
+            return Optional.empty();
+        }
     }
 
     /**
      * Полчение компании по её id с параметром approved = true.
      *
-     * @param id id компании
+     * @param companyId id компании
      * @return сущность с данными компании
      */
-    public Optional<CompanyResponseDto> findApprovedById(long id) {
+    public Optional<CompanyResponseDto> findApprovedById(long companyId) {
         try {
             var company = template.queryForObject(
                     GET_APPROVED_COMPANY_BY_ID,
-                    Map.of("id", id),
+                    Map.of("id", companyId),
                     (rs, i) -> new CompanyResponseDto(
                             rs.getLong("id"),
                             rs.getString("name"),
@@ -55,7 +61,7 @@ public class CompanyRepository implements CompanySqlQueries {
 
             var games = template.query(
                     CONDENSED_GAME_INFO_FOR_COMPANY,
-                    Map.of("id", id),
+                    Map.of("id", companyId),
                     (rs, i) -> new GameCondensedResponseDto(
                             rs.getLong("id"),
                             rs.getString("name"),
@@ -71,20 +77,26 @@ public class CompanyRepository implements CompanySqlQueries {
         }
     }
 
-    public List<CompanyCondensedResponseDto> getAllNotApproved() {
-        return template.query(
-                GET_ALL_NOT_APPROVED_COMPANIES,
-                (rs, i) -> new CompanyCondensedResponseDto(
-                        rs.getLong("id"),
-                        rs.getString("name")
-                ));
+    public Optional<List<CompanyCondensedResponseDto>> getAllNotApproved() {
+        try {
+            var companies = template.query(
+                    GET_ALL_NOT_APPROVED_COMPANIES,
+                    (rs, i) -> new CompanyCondensedResponseDto(
+                            rs.getLong("id"),
+                            rs.getString("name")
+                    ));
+            return Optional.ofNullable(companies);
+        } catch (
+                EmptyResultDataAccessException e) {
+            return Optional.empty();
+        }
     }
 
-    public Optional<NotApprovedCompanyResponseDto> findNotApprovedById(long id) {
+    public Optional<NotApprovedCompanyResponseDto> findNotApprovedById(long companyId) {
         try {
             var company = template.queryForObject(
                     GET_NOT_APPROVED_COMPANY_BY_ID,
-                    Map.of("id", id),
+                    Map.of("id", companyId),
                     (rs, i) -> new NotApprovedCompanyResponseDto(
                             rs.getLong("id"),
                             rs.getString("name"),
@@ -93,27 +105,32 @@ public class CompanyRepository implements CompanySqlQueries {
                             rs.getDate("creation_date").toLocalDate()
                     ));
 
-            assert company != null;
-            return Optional.of(company);
+            return Optional.ofNullable(company);
         } catch (EmptyResultDataAccessException e) {
             return Optional.empty();
         }
     }
 
-    public List<CompanyCondensedResponseDto> getAllReturned() {
-        return template.query(
-                GET_ALL_RETURNED_COMPANIES,
-                (rs, i) -> new CompanyCondensedResponseDto(
-                        rs.getLong("id"),
-                        rs.getString("name")
-                ));
+    public Optional<List<CompanyCondensedResponseDto>> getAllReturned() {
+        try {
+            var companies = template.query(
+                    GET_ALL_RETURNED_COMPANIES,
+                    (rs, i) -> new CompanyCondensedResponseDto(
+                            rs.getLong("id"),
+                            rs.getString("name")
+                    ));
+
+            return Optional.ofNullable(companies);
+        } catch (EmptyResultDataAccessException e) {
+            return Optional.empty();
+        }
     }
 
-    public Optional<NotApprovedCompanyResponseDto> findReturnedById(long id) {
+    public Optional<NotApprovedCompanyResponseDto> findReturnedById(long companyId) {
         try {
             var company = template.queryForObject(
                     GET_RETURNED_COMPANY_BY_ID,
-                    Map.of("id", id),
+                    Map.of("id", companyId),
                     (rs, i) -> new NotApprovedCompanyResponseDto(
                             rs.getLong("id"),
                             rs.getString("name"),
@@ -159,11 +176,10 @@ public class CompanyRepository implements CompanySqlQueries {
         return companyCount > 0;
     }
 
-    //TODO: если заявку на создание компании апрувят, то менять роль USER на DEVELOPER
-    public void approveCompany(long id) {
+    public void approveCompany(long companyId) {
         template.update(
                 APPROVE_COMPANY,
-                Map.of("id", id));
+                Map.of("id", companyId));
     }
 
     public ReturnedCompanyResponseDto findNotApprovedCompanyWithCommentById(long id) {
@@ -176,5 +192,14 @@ public class CompanyRepository implements CompanySqlQueries {
 
     public Optional<CompanyResponseDto> editCompany(long id, CompanyRequestDto dto) {
         return null;
+    }
+
+    public long getCompanyIdByCompanyName(String companyName) {
+        var id = template.queryForObject(
+                GET_COMPANY_ID_BY_NAME,
+                Map.of("name", companyName),
+                (rs, i) -> rs.getLong("id"));
+        assert id != null;
+        return id;
     }
 }

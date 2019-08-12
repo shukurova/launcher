@@ -9,6 +9,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Repository;
+import ru.itpark.gameslauncher.domain.AuthorityDomain;
 import ru.itpark.gameslauncher.domain.UserDomain;
 import ru.itpark.gameslauncher.dto.user.UserProfileResponseDto;
 import ru.itpark.gameslauncher.repository.sql.DeveloperSqlQueries;
@@ -216,7 +217,8 @@ public class UserRepository implements UserSqlQueries, DeveloperSqlQueries, Game
      * @param userId id пользователя
      * @return true, если id компании игры равно id компании пользователя
      */
-    public boolean isGameDeveloper(long gameId, long userId) {
+    public boolean isGameDeveloper(long gameId,
+                                   long userId) {
         var gameCompanyId = template.query(
                 GET_COMPANY_ID_FROM_GAMES,
                 Map.of("id", gameId),
@@ -229,5 +231,12 @@ public class UserRepository implements UserSqlQueries, DeveloperSqlQueries, Game
                 (rs, i) ->
                         rs.getLong("company_id"));
         return gameCompanyId.equals(userCompanyId);
+    }
+
+    public void addRoleToUsers(AuthorityDomain domain) {
+        template.update(
+                ADD_ROLE,
+                Map.of("user_id", domain.getId(),
+                        "role", domain.getAuthority()));
     }
 }

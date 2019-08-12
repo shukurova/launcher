@@ -22,4 +22,6 @@ public interface UserSqlQueries {
     String ENABLE_USER = "UPDATE users SET enabled = true WHERE id = :id;";
 
     String USER_INFORMATION = "SELECT id, name, username, email, created FROM users WHERE id = :id;";
+
+    String ADD_ROLE = "INSERT INTO authorities (user_id, authority) VALUES (:userId, :authority)";
 }
