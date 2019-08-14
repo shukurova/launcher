@@ -40,7 +40,8 @@ CREATE TABLE companies
     content       TEXT NOT NULL,
     creation_date DATE NOT NULL,
     approved     BOOlEAN NOT NULL DEFAULT FALSE,
-    returned     BOOlEAN NOT NULL DEFAULT FALSE
+    returned     BOOlEAN NOT NULL DEFAULT FALSE,
+    creator_id INTEGER NOT NULL REFERENCES users
 );
 
 CREATE TABLE games
@@ -70,6 +71,14 @@ CREATE TABLE return_game_comments
 (
     id         SERIAL PRIMARY KEY,
     game_id    INTEGER   NOT NULL REFERENCES games,
+    company_id INTEGER   NOT NULL REFERENCES companies,
+    comment    TEXT      NOT NULL,
+    created    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE return_company_comments
+(
+    id         SERIAL PRIMARY KEY,
     company_id INTEGER   NOT NULL REFERENCES companies,
     comment    TEXT      NOT NULL,
     created    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP

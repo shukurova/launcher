@@ -11,7 +11,6 @@ import ru.itpark.gameslauncher.dto.game.*;
 import ru.itpark.gameslauncher.service.GameService;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequiredArgsConstructor
@@ -25,7 +24,7 @@ public class GameRestController {
     }
 
     @GetMapping("/{id}")
-    public Optional<GameResponseDto> findApprovedById(@PathVariable long id) {
+    public GameResponseDto findApprovedById(@PathVariable long id) {
         return gameService.findApprovedById(id);
     }
 
@@ -37,7 +36,7 @@ public class GameRestController {
 
     @GetMapping("/not-approved/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public Optional<NotApprovedGameResponseDto> findNotApprovedById(@PathVariable long id) {
+    public NotApprovedGameResponseDto findNotApprovedById(@PathVariable long id) {
         return gameService.findNotApprovedById(id);
     }
 
@@ -49,14 +48,14 @@ public class GameRestController {
 
     @GetMapping("/returned/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public Optional<NotApprovedGameResponseDto> findReturnedById(@PathVariable long id) {
+    public NotApprovedGameResponseDto findReturnedById(@PathVariable long id) {
         return gameService.findReturnedById(id);
     }
 
     @PostMapping
     @PreAuthorize("hasRole('DEVELOPER')")
-    public Optional<GameDomain> createGame(@RequestBody GameRequestDto dto,
-                                           @AuthenticationPrincipal UserDomain user) {
+    public GameDomain createGame(@RequestBody GameRequestDto dto,
+                                 @AuthenticationPrincipal UserDomain user) {
         return gameService.createGame(dto, user);
     }
 
@@ -75,9 +74,9 @@ public class GameRestController {
     }
 
     @PostMapping("/{id}/edit")
-    @PreAuthorize("hasRole('ADMIN')")
-    public Optional<GameResponseDto> editGame(@PathVariable long id,
-                                              @RequestBody GameRequestDto dto) {
-        return gameService.editGame(id, dto);
+    @PreAuthorize("@permissionService.isGameDeveloper(#id, #user.id)")
+    public GameResponseDto createUpdateRequest(@PathVariable long id,
+                                    @RequestBody GameRequestDto dto) {
+        return gameService.createUpdateRequest(id, dto);
     }
 }

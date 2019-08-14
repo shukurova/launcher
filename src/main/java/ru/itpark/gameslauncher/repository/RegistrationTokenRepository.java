@@ -9,14 +9,13 @@ import org.springframework.stereotype.Repository;
 import ru.itpark.gameslauncher.domain.RegistrationTokenDomain;
 import ru.itpark.gameslauncher.dto.registration.RegistrationConfirmationRequestDto;
 import ru.itpark.gameslauncher.exception.TokenException;
-import ru.itpark.gameslauncher.repository.sql.RegistrationSqlQueries;
 
 import java.util.Map;
 import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
-public class RegistrationTokenRepository implements RegistrationSqlQueries {
+public class RegistrationTokenRepository {
     private final NamedParameterJdbcTemplate template;
 
     /**
@@ -26,7 +25,7 @@ public class RegistrationTokenRepository implements RegistrationSqlQueries {
     @Scheduled(fixedRate = 60 * 1000)
     public void dropTokensByTime() {
         template.update(
-                DROP_TOKENS_BY_TIME,
+                "DELETE FROM registration_tokens WHERE (SELECT extract(epoch FROM (SELECT CURRENT_TIMESTAMP::timestamp - created::timestamp)) / 60) >= 30;",
                 new MapSqlParameterSource());
     }
 
@@ -40,7 +39,7 @@ public class RegistrationTokenRepository implements RegistrationSqlQueries {
             throw new TokenException("Token invalid");
         }
         template.update(
-                SAVE_TOKEN,
+                "INSERT INTO registration_tokens (id, user_id) VALUES (:id, :userId);",
                 Map.of("id", domain.getToken(),
                         "userId", domain.getUserId()));
     }
@@ -54,7 +53,7 @@ public class RegistrationTokenRepository implements RegistrationSqlQueries {
     public Optional<RegistrationTokenDomain> findByToken(RegistrationConfirmationRequestDto dto) {
         try {
             var domain = template.queryForObject(
-                    FIND_BY_TOKEN,
+                    "SELECT id, user_id, created FROM registration_tokens WHERE id = :id;",
                     Map.of("id", dto.getToken()),
                     (rs, i) -> new RegistrationTokenDomain(
                             rs.getString("id"),
@@ -75,7 +74,7 @@ public class RegistrationTokenRepository implements RegistrationSqlQueries {
      */
     public int countTokenByUserId(final long userId) {
         var tokenCount = template.queryForObject(
-                TOKENS_COUNT,
+                "SELECT COUNT(id) FROM registration_tokens WHERE user_id = :userId;",
                 Map.of("userId", userId),
                 Integer.class);
         assert tokenCount != null;

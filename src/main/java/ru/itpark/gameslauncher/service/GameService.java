@@ -6,16 +6,12 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.itpark.gameslauncher.domain.UserDomain;
 import ru.itpark.gameslauncher.domain.game.GameDomain;
 import ru.itpark.gameslauncher.dto.game.*;
-import ru.itpark.gameslauncher.exception.CompanyNotFoundException;
-import ru.itpark.gameslauncher.exception.EmailNotFoundException;
-import ru.itpark.gameslauncher.exception.GameAlreadyExistsException;
-import ru.itpark.gameslauncher.exception.GameNotFoundException;
+import ru.itpark.gameslauncher.exception.*;
 import ru.itpark.gameslauncher.repository.CompanyRepository;
 import ru.itpark.gameslauncher.repository.DeveloperRepository;
 import ru.itpark.gameslauncher.repository.GameRepository;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @Transactional
@@ -30,27 +26,30 @@ public class GameService {
         return gameRepository.getAllApproved();
     }
 
-    public Optional<GameResponseDto> findApprovedById(long id) {
-        return gameRepository.findApprovedById(id);
+    public GameResponseDto findApprovedById(long id) {
+        return gameRepository.findApprovedById(id)
+                .orElseThrow(() -> new GameNotFoundException("Game not found!"));
     }
 
     public List<GameCondensedResponseDto> getAllNotApproved() {
         return gameRepository.getAllNotApproved();
     }
 
-    public Optional<NotApprovedGameResponseDto> findNotApprovedById(long id) {
-        return gameRepository.findNotApprovedById(id);
+    public NotApprovedGameResponseDto findNotApprovedById(long id) {
+        return gameRepository.findNotApprovedById(id)
+                .orElseThrow(() -> new GameNotFoundException("Game not found!"));
     }
 
     public List<GameCondensedResponseDto> getAllReturned() {
         return gameRepository.getAllReturned();
     }
 
-    public Optional<NotApprovedGameResponseDto> findReturnedById(long id) {
-        return gameRepository.findReturnedById(id);
+    public NotApprovedGameResponseDto findReturnedById(long id) {
+        return gameRepository.findReturnedById(id)
+                .orElseThrow(() -> new GameNotFoundException("Game not found!"));
     }
 
-    public Optional<GameDomain> createGame(GameRequestDto dto, UserDomain user) {
+    public GameDomain createGame(GameRequestDto dto, UserDomain user) {
         if (gameRepository.checkExistsByName(dto.getName())) {
             throw new GameAlreadyExistsException(
                     String.format("Game with this name %s already exists!", dto.getName()));
@@ -75,7 +74,8 @@ public class GameService {
                 false
         );
 
-        return gameRepository.createGame(game);
+        return gameRepository.createGame(game)
+                .orElseThrow(() -> new CreateException("Failed create the record! Please, try later."));
     }
 
     public void approveGame(long id) {
@@ -98,11 +98,12 @@ public class GameService {
 //                String.format("Please, check your game record. You need to edit your game.\n %s", comment));
         gameRepository.returnGame(id, game.getCompanyName(), dto.getComment());
 
-        return gameRepository.findNotApprovedGameWithCommentById(id);
+        return gameRepository.findNotApprovedGameWithCommentById(id)
+                .orElseThrow(() -> new GameNotFoundException("Users games not found!"));
     }
 
-    public Optional<GameResponseDto> editGame(long id,
-                                              GameRequestDto dto) {
+    public GameResponseDto createUpdateRequest(long id,
+                                               GameRequestDto dto) {
         if (gameRepository.checkExistsByName(dto.getName())) {
             throw new GameAlreadyExistsException(
                     String.format("Game with this name %s already exists!", dto.getName()));
@@ -118,8 +119,9 @@ public class GameService {
                 dto.getGenre()
         );
 
-        gameRepository.editGame(game);
+        //TODO: создание заявки на редактирование
 
-        return gameRepository.findById(game.getId());
+        return gameRepository.findById(game.getId())
+                .orElseThrow(() -> new GameNotFoundException("Game not found!"));
     }
 }

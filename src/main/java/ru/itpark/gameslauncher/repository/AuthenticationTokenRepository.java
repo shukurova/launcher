@@ -6,14 +6,13 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 import ru.itpark.gameslauncher.domain.AuthenticationTokenDomain;
 import ru.itpark.gameslauncher.exception.TokenException;
-import ru.itpark.gameslauncher.repository.sql.AuthenticationSqlQueries;
 
 import java.util.Map;
 import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
-public class AuthenticationTokenRepository implements AuthenticationSqlQueries {
+public class AuthenticationTokenRepository {
     private final NamedParameterJdbcTemplate template;
 
     /**
@@ -25,7 +24,7 @@ public class AuthenticationTokenRepository implements AuthenticationSqlQueries {
     public Optional<AuthenticationTokenDomain> findByToken(String token) {
         try {
             var user = template.queryForObject(
-                    FIND_BY_TOKEN,
+                    "SELECT id, user_id FROM authentication_tokens WHERE id = :id;",
                     Map.of("id", token),
                     (rs, i) -> new AuthenticationTokenDomain(
                             rs.getString("id"),
@@ -47,7 +46,8 @@ public class AuthenticationTokenRepository implements AuthenticationSqlQueries {
         if (domain.getToken() == null) {
             throw new TokenException("Invalid token!");
         }
-        template.update(SAVE_TOKEN,
+        template.update(
+                "INSERT INTO authentication_tokens (id, user_id) VALUES (:id, :userId);",
                 Map.of("id", domain.getToken(),
                         "userId", domain.getUserId()));
     }

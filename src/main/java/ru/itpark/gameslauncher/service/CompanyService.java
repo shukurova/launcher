@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.itpark.gameslauncher.domain.AuthorityDomain;
 import ru.itpark.gameslauncher.domain.CompanyDomain;
+import ru.itpark.gameslauncher.domain.UserDomain;
 import ru.itpark.gameslauncher.dto.company.*;
 import ru.itpark.gameslauncher.exception.*;
 import ru.itpark.gameslauncher.repository.CompanyRepository;
@@ -12,7 +13,6 @@ import ru.itpark.gameslauncher.repository.DeveloperRepository;
 import ru.itpark.gameslauncher.repository.UserRepository;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @Transactional
@@ -23,8 +23,7 @@ public class CompanyService {
     private final DeveloperRepository developerRepository;
 
     public List<CompanyCondensedResponseDto> getAllApproved() {
-        return companyRepository.getAllApproved()
-                .orElseThrow(() -> new CompanyNotFoundException("Companies not found!"));
+        return companyRepository.getAllApproved();
     }
 
     public CompanyResponseDto findApprovedById(long id) {
@@ -33,8 +32,7 @@ public class CompanyService {
     }
 
     public List<CompanyCondensedResponseDto> getAllNotApproved() {
-        return companyRepository.getAllNotApproved()
-                .orElseThrow(() -> new CompanyNotFoundException("Companies not found!"));
+        return companyRepository.getAllNotApproved();
     }
 
     public NotApprovedCompanyResponseDto findNotApprovedById(long id) {
@@ -43,8 +41,7 @@ public class CompanyService {
     }
 
     public List<CompanyCondensedResponseDto> getAllReturned() {
-        return companyRepository.getAllReturned()
-                .orElseThrow(() -> new CompanyNotFoundException("Companies not found!"));
+        return companyRepository.getAllReturned();
     }
 
     public NotApprovedCompanyResponseDto findReturnedById(long id) {
@@ -52,7 +49,8 @@ public class CompanyService {
                 .orElseThrow(() -> new CompanyNotFoundException("Company not found!"));
     }
 
-    public CompanyDomain createCompany(CompanyRequestDto dto) {
+    public CompanyDomain createCompany(CompanyRequestDto dto,
+                                       UserDomain userDomain) {
         if (companyRepository.checkExistsByName(dto.getName())) {
             throw new CompanyAlreadyExistsException(
                     String.format("Company with this name %s already exists!", dto.getName()));
@@ -68,7 +66,12 @@ public class CompanyService {
                 false
         );
 
-        return companyRepository.createCompany(company).orElseThrow(()-> new CreateException("Something bad happened! Please try later"));
+        var companyAfterCreation = companyRepository.createCompany(company)
+                .orElseThrow(()-> new CreateException("Failed create the record! Please, try later."));
+
+        developerRepository
+                .createDeveloper(userDomain.getId(), companyAfterCreation.getId());
+        return companyAfterCreation;
     }
 
     public void approveCompany(long companyId) {
@@ -91,7 +94,7 @@ public class CompanyService {
     public ReturnedCompanyResponseDto returnCompany(long companyId,
                                                     ReturnedCompanyRequestDto dto) {
         var company = companyRepository.findNotApprovedById(companyId)
-                .orElseThrow(() -> new GameNotFoundException("Company not found!"));
+                .orElseThrow(() -> new CompanyNotFoundException("Company not found!"));
         List<String> emails = developerRepository
                 .getDevelopersEmailsByCompanyId(companyId)
                 .orElseThrow(() ->
@@ -102,12 +105,13 @@ public class CompanyService {
 //                emails,
 //                "Edit your record",
 //                String.format("Please, check your game record. You need to edit your game.\n %s", comment));
-        companyRepository.returnCompany(companyId, company.getName(), dto.getComment());
+        companyRepository.returnCompany(companyId, dto.getComment());
 
-        return companyRepository.findNotApprovedCompanyWithCommentById(companyId);
+        return companyRepository.findNotApprovedCompanyWithCommentById(companyId)
+                .orElseThrow(() -> new CompanyNotFoundException("Company not found!"));
     }
 
-    public Optional<CompanyResponseDto> editCompany(long id, CompanyRequestDto dto) {
-        return companyRepository.editCompany(id, dto);
+    public void editCompany(long id, CompanyRequestDto dto) {
+        companyRepository.editCompany(id, dto);
     }
 }

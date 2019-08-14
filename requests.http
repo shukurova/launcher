@@ -35,7 +35,7 @@ POST http://localhost:8080/api/authentication
 Content-Type: application/json
 
 {
-  "username": "dev",
+  "username": "olya",
   "password": "password"
 }
 
@@ -179,6 +179,12 @@ X-Token: {{auth_token}}
 
 ###
 
+GET http://localhost:8080/api/profile/games/created-by-me
+Content-Type: application/json
+X-Token: {{auth_token}}
+
+###
+
 GET http://localhost:8080/api/profile/games/2
 Content-Type: application/json
 X-Token: {{auth_token}}
@@ -197,5 +203,102 @@ X-Token: {{auth_token}}
   "status": "TODO",
   "genre": "RPG"
 }
+
+###
+
+POST http://localhost:8080/api/companies
+Content-Type: application/json
+X-Token: {{auth_token}}
+
+{
+  "name": "Fake Developers",
+  "country": "Russia",
+  "content": "We are not developers",
+  "creationDate": "2019-04-01"
+}
+
+###
+
+GET http://localhost:8080/api/companies
+X-Token: {{auth_token}}
+
+> {%
+client.test("Request executed successfully", function() {
+  client.assert(response.status === 200, "Response status is not 200");
+});
+%}
+
+###
+
+GET http://localhost:8080/api/companies/2
+X-Token: {{auth_token}}
+
+> {%
+client.test("Request executed successfully", function() {
+  client.assert(response.status === 200, "Response status is not 200");
+});
+%}
+
+###
+
+GET http://localhost:8080/api/companies/not-approved
+X-Token: {{auth_token}}
+
+> {%
+client.test("Request executed successfully", function() {
+  client.assert(response.status === 200, "Response status is not 200");
+});
+%}
+
+###
+
+GET http://localhost:8080/api/companies/not-approved/13
+X-Token: {{auth_token}}
+
+> {%
+client.test("Request executed successfully", function() {
+  client.assert(response.status === 200, "Response status is not 200");
+});
+%}
+
+###
+
+POST http://localhost:8080/api/companies/not-approved/21/approve
+Content-Type: application/json
+X-Token: {{auth_token}}
+
+> {%
+client.test("Request executed successfully", function() {
+  client.assert(response.status === 200, "Response status is not 200");
+});
+%}
+
+###
+
+GET http://localhost:8080/api/companies/returned
+X-Token: {{auth_token}}
+
+> {%
+client.test("Request executed successfully", function() {
+  client.assert(response.status === 200, "Response status is not 200");
+});
+%}
+
+###
+
+
+POST http://localhost:8080/api/companies/not-approved/13/return
+Content-Type: application/json
+X-Token: {{auth_token}}
+
+{
+  "comment": "We are not working with fake developers."
+}
+
+> {%
+client.test("Request executed successfully", function() {
+  client.assert(response.status === 200, "Response status is not 200");
+});
+%}
 
 ###

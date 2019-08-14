@@ -14,7 +14,6 @@ import ru.itpark.gameslauncher.service.GameService;
 import ru.itpark.gameslauncher.service.UserService;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/profile")
@@ -24,25 +23,30 @@ public class UserRestController {
     private final GameService gameService;
 
     @GetMapping
-    public Optional<UserProfileResponseDto> profile(@AuthenticationPrincipal UserDomain domain) {
+    public UserProfileResponseDto profile(@AuthenticationPrincipal UserDomain domain) {
         return userService.getUserInformation(domain);
     }
 
     @GetMapping("/games")
-    public Optional<List<GameCondensedResponseDto>> findUserGames(@AuthenticationPrincipal UserDomain domain) {
+    public List<GameCondensedResponseDto> findUserGames(@AuthenticationPrincipal UserDomain domain) {
         return userService.findUserGames(domain);
     }
 
+    @GetMapping("/games/created-by-me")
+    public List<GameCondensedResponseDto> findNotApprovedUserGames(@AuthenticationPrincipal UserDomain domain) {
+        return userService.findNotApprovedUserGames(domain);
+    }
+
     @GetMapping("/games/{id}")
-    public Optional<UserGameResponseDto> findUserGameById(@PathVariable long id) {
+    public UserGameResponseDto findUserGameById(@PathVariable long id) {
         return userService.findUserGameById(id);
     }
 
     @PostMapping("/games/{id}/edit")
     @PreAuthorize("@permissionService.isGameDeveloper(#id, #user.id)")
-    public Optional<GameResponseDto> editGame(@PathVariable long id,
-                                              @RequestBody GameRequestDto dto,
-                                              @AuthenticationPrincipal UserDomain user) {
-        return gameService.editGame(id, dto);
+    public GameResponseDto createUpdateRequest(@PathVariable long id,
+                                               @RequestBody GameRequestDto dto,
+                                               @AuthenticationPrincipal UserDomain user) {
+        return gameService.createUpdateRequest(id, dto);
     }
 }

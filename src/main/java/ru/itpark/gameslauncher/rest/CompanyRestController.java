@@ -11,7 +11,6 @@ import ru.itpark.gameslauncher.dto.company.*;
 import ru.itpark.gameslauncher.service.CompanyService;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequiredArgsConstructor
@@ -25,7 +24,7 @@ public class CompanyRestController {
     }
 
     @GetMapping("/{id}")
-    public Optional<CompanyResponseDto> findApprovedById(@PathVariable long id) {
+    public CompanyResponseDto findApprovedById(@PathVariable long id) {
         return companyService.findApprovedById(id);
     }
 
@@ -37,7 +36,7 @@ public class CompanyRestController {
 
     @GetMapping("/not-approved/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public Optional<NotApprovedCompanyResponseDto> findNotApprovedById(@PathVariable long id) {
+    public NotApprovedCompanyResponseDto findNotApprovedById(@PathVariable long id) {
         return companyService.findNotApprovedById(id);
     }
 
@@ -49,14 +48,15 @@ public class CompanyRestController {
 
     @GetMapping("/returned/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public Optional<NotApprovedCompanyResponseDto> findReturnedById(@PathVariable long id) {
+    public NotApprovedCompanyResponseDto findReturnedById(@PathVariable long id) {
         return companyService.findReturnedById(id);
     }
 
     @PostMapping
     @PreAuthorize("hasRole('USER')")
-    public Optional<CompanyDomain> createCompany(@RequestBody CompanyRequestDto dto) {
-        return companyService.createCompany(dto);
+    public CompanyDomain createCompany(@RequestBody CompanyRequestDto dto,
+                                       @AuthenticationPrincipal UserDomain domain) {
+        return companyService.createCompany(dto, domain);
     }
 
     @PostMapping("/not-approved/{id}/approve")
@@ -74,9 +74,11 @@ public class CompanyRestController {
     }
 
     @PostMapping("/{id}/edit")
-    @PreAuthorize("hasRole('ADMIN')")
-    public Optional<CompanyResponseDto> editCompany(@PathVariable long id,
-                                                    @RequestBody CompanyRequestDto dto) {
-        return companyService.editCompany(id, dto);
+    @PreAuthorize("@permissionService.isCompanyDeveloper(#id, #user.id)")
+    @ResponseStatus(HttpStatus.OK)
+    public void editCompany(@PathVariable long id,
+                                          @RequestBody CompanyRequestDto dto,
+                                          @AuthenticationPrincipal UserDomain user) {
+        companyService.editCompany(id, dto);
     }
 }

@@ -14,4 +14,9 @@ public class PermissionService {
     public boolean isGameDeveloper(long gameId, long userId) {
         return userRepository.isGameDeveloper(gameId, userId);
     }
+
+    //TODO: реализовать проверку, что пользователь разработчик той команды, информацию которой он хочет отредактировать
+    public boolean isCompanyDeveloper(long companyId, long userId) {
+        return false;
+    }
 }

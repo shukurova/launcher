@@ -10,13 +10,12 @@ import ru.itpark.gameslauncher.domain.CompanyDomain;
 import ru.itpark.gameslauncher.dto.company.*;
 import ru.itpark.gameslauncher.dto.game.GameCondensedResponseDto;
 import ru.itpark.gameslauncher.exception.CompanyNotFoundException;
-import ru.itpark.gameslauncher.repository.sql.CompanySqlQueries;
 
 import java.util.*;
 
 @Repository
 @RequiredArgsConstructor
-public class CompanyRepository implements CompanySqlQueries {
+public class CompanyRepository {
     private final NamedParameterJdbcTemplate template;
 
     /**
@@ -24,23 +23,17 @@ public class CompanyRepository implements CompanySqlQueries {
      *
      * @return список компаний
      */
-    public Optional<List<CompanyCondensedResponseDto>> getAllApproved() {
-        try {
-            var companies = template.query(
-                    GET_ALL_APPROVED_COMPANIES,
-                    (rs, i) -> new CompanyCondensedResponseDto(
-                            rs.getLong("id"),
-                            rs.getString("name")
-                    ));
-            return Optional.ofNullable(companies);
-        } catch (
-                EmptyResultDataAccessException e) {
-            return Optional.empty();
-        }
+    public List<CompanyCondensedResponseDto> getAllApproved() {
+        return template.query(
+                "SELECT id, name, country, content, creation_date FROM companies WHERE approved = true;",
+                (rs, i) -> new CompanyCondensedResponseDto(
+                        rs.getLong("id"),
+                        rs.getString("name")
+                ));
     }
 
     /**
-     * Полчение компании по её id с параметром approved = true.
+     * Получение компании по её id с параметром approved = true.
      *
      * @param companyId id компании
      * @return сущность с данными компании
@@ -48,7 +41,7 @@ public class CompanyRepository implements CompanySqlQueries {
     public Optional<CompanyResponseDto> findApprovedById(long companyId) {
         try {
             var company = template.queryForObject(
-                    GET_APPROVED_COMPANY_BY_ID,
+                    "SELECT id, name, country, content, creation_date FROM companies WHERE id = :id AND approved = true;",
                     Map.of("id", companyId),
                     (rs, i) -> new CompanyResponseDto(
                             rs.getLong("id"),
@@ -60,7 +53,7 @@ public class CompanyRepository implements CompanySqlQueries {
                     ));
 
             var games = template.query(
-                    CONDENSED_GAME_INFO_FOR_COMPANY,
+                    "SELECT g.id, g.name, g.coverage FROM games g JOIN companies c ON g.company_id = c.id WHERE c.id = :id;",
                     Map.of("id", companyId),
                     (rs, i) -> new GameCondensedResponseDto(
                             rs.getLong("id"),
@@ -77,25 +70,19 @@ public class CompanyRepository implements CompanySqlQueries {
         }
     }
 
-    public Optional<List<CompanyCondensedResponseDto>> getAllNotApproved() {
-        try {
-            var companies = template.query(
-                    GET_ALL_NOT_APPROVED_COMPANIES,
-                    (rs, i) -> new CompanyCondensedResponseDto(
-                            rs.getLong("id"),
-                            rs.getString("name")
-                    ));
-            return Optional.ofNullable(companies);
-        } catch (
-                EmptyResultDataAccessException e) {
-            return Optional.empty();
-        }
+    public List<CompanyCondensedResponseDto> getAllNotApproved() {
+        return template.query(
+                "SELECT id, name FROM companies WHERE approved = false AND returned = false;",
+                (rs, i) -> new CompanyCondensedResponseDto(
+                        rs.getLong("id"),
+                        rs.getString("name")
+                ));
     }
 
     public Optional<NotApprovedCompanyResponseDto> findNotApprovedById(long companyId) {
         try {
             var company = template.queryForObject(
-                    GET_NOT_APPROVED_COMPANY_BY_ID,
+                    "SELECT id, name, country, content, creation_date FROM companies WHERE approved = false AND returned = false;",
                     Map.of("id", companyId),
                     (rs, i) -> new NotApprovedCompanyResponseDto(
                             rs.getLong("id"),
@@ -111,25 +98,19 @@ public class CompanyRepository implements CompanySqlQueries {
         }
     }
 
-    public Optional<List<CompanyCondensedResponseDto>> getAllReturned() {
-        try {
-            var companies = template.query(
-                    GET_ALL_RETURNED_COMPANIES,
-                    (rs, i) -> new CompanyCondensedResponseDto(
-                            rs.getLong("id"),
-                            rs.getString("name")
-                    ));
-
-            return Optional.ofNullable(companies);
-        } catch (EmptyResultDataAccessException e) {
-            return Optional.empty();
-        }
+    public List<CompanyCondensedResponseDto> getAllReturned() {
+        return template.query(
+                "SELECT id, name FROM companies WHERE approved = false AND returned = true;",
+                (rs, i) -> new CompanyCondensedResponseDto(
+                        rs.getLong("id"),
+                        rs.getString("name")
+                ));
     }
 
     public Optional<NotApprovedCompanyResponseDto> findReturnedById(long companyId) {
         try {
             var company = template.queryForObject(
-                    GET_RETURNED_COMPANY_BY_ID,
+                    "SELECT id, name, country, content, creation_date FROM companies WHERE id = :id AND approved = false AND returned = true;",
                     Map.of("id", companyId),
                     (rs, i) -> new NotApprovedCompanyResponseDto(
                             rs.getLong("id"),
@@ -146,20 +127,21 @@ public class CompanyRepository implements CompanySqlQueries {
         }
     }
 
-    //TODO: привязывать ID созданной компании к ID разраба в таблице 'developers'
     public Optional<CompanyDomain> createCompany(CompanyDomain domain) {
         var keyHolder = new GeneratedKeyHolder();
         try {
             template.update(
-                    CREATE_COMPANY,
+                    "INSERT INTO companies (name, country, content, creation_date) VALUES (:name, :country, :content, :creation_date);",
                     new MapSqlParameterSource(
                             Map.of("name", domain.getName(),
                                     "country", domain.getCountry(),
                                     "content", domain.getContent(),
                                     "creation_date", domain.getCreationDate())),
                     keyHolder);
+
             var key = ((Number) Objects.requireNonNull(keyHolder.getKeys()).get("id")).longValue();
             domain.setId(key);
+
             return Optional.of(domain);
         } catch (EmptyResultDataAccessException e) {
             return Optional.empty();
@@ -168,7 +150,7 @@ public class CompanyRepository implements CompanySqlQueries {
 
     public boolean checkExistsByName(String name) {
         var companyCount = template.queryForObject(
-                CHECK_COMPANY_EXISTS_BY_NAME,
+                "SELECT count(id) FROM companies WHERE name = :name;",
                 Map.of("name", name),
                 Integer.class);
 
@@ -178,25 +160,61 @@ public class CompanyRepository implements CompanySqlQueries {
 
     public void approveCompany(long companyId) {
         template.update(
-                APPROVE_COMPANY,
+                "UPDATE companies SET approved = true, returned = false WHERE id = :id;",
                 Map.of("id", companyId));
     }
 
-    public ReturnedCompanyResponseDto findNotApprovedCompanyWithCommentById(long id) {
-        return null;
+    public Optional<ReturnedCompanyResponseDto> findNotApprovedCompanyWithCommentById(long companyId) {
+        try {
+            var company = template.queryForObject(
+                    "SELECT c.id, c.name, c.country, c.content, c.creation_date, rcc.comment " +
+                            "FROM companies c " +
+                            "JOIN return_company_comments rcc ON c.id = rcc.company_id " +
+                            "AND c.returned = true " +
+                            "AND c.id = :id;",
+                    Map.of("id", companyId),
+                    (rs, i) -> new ReturnedCompanyResponseDto(
+                            rs.getLong("id"),
+                            rs.getString("name"),
+                            rs.getString("country"),
+                            rs.getString("content"),
+                            rs.getDate("creation_date").toLocalDate(),
+                            rs.getString("comment")
+                    ));
+
+            return Optional.ofNullable(company);
+        } catch (EmptyResultDataAccessException e) {
+            throw new CompanyNotFoundException("Company not found!");
+        }
     }
 
-    public void returnCompany(long id, String name, String comment) {
+    public void returnCompany(long id,
+                              String comment) {
+        template.update(
+                "INSERT INTO return_company_comments (company_id, comment) VALUES (:companyId, :comment);",
+                new MapSqlParameterSource(
+                        Map.of("companyId", id,
+                                "comment", comment)));
 
+        template.update(
+                "UPDATE companies set returned = true where id = :id;",
+                Map.of("id", id));
     }
 
-    public Optional<CompanyResponseDto> editCompany(long id, CompanyRequestDto dto) {
-        return null;
+    public void editCompany(long companyId,
+                            CompanyRequestDto dto) {
+        template.update(
+                "UPDATE companies SET name = :name, country = :country, content = :content, creation_date = :creationDate, returned = false WHERE id = :id;",
+                Map.of("name", dto.getName(),
+                        "country", dto.getCountry(),
+                        "content", dto.getContent(),
+                        "creation_date", dto.getCreationDate(),
+                        "id", companyId));
     }
 
     public long getCompanyIdByCompanyName(String companyName) {
         var id = template.queryForObject(
-                GET_COMPANY_ID_BY_NAME,
+                "SELECT id FROM companies WHERE name = :name;",
                 Map.of("name", companyName),
                 (rs, i) -> rs.getLong("id"));
         assert id != null;

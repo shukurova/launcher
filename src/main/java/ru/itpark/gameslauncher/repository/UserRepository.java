@@ -12,9 +12,6 @@ import org.springframework.stereotype.Repository;
 import ru.itpark.gameslauncher.domain.AuthorityDomain;
 import ru.itpark.gameslauncher.domain.UserDomain;
 import ru.itpark.gameslauncher.dto.user.UserProfileResponseDto;
-import ru.itpark.gameslauncher.repository.sql.DeveloperSqlQueries;
-import ru.itpark.gameslauncher.repository.sql.GameSqlQueries;
-import ru.itpark.gameslauncher.repository.sql.UserSqlQueries;
 
 import java.util.Collections;
 import java.util.Map;
@@ -23,7 +20,7 @@ import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
-public class UserRepository implements UserSqlQueries, DeveloperSqlQueries, GameSqlQueries {
+public class UserRepository {
     private final NamedParameterJdbcTemplate template;
 
     /**
@@ -33,7 +30,7 @@ public class UserRepository implements UserSqlQueries, DeveloperSqlQueries, Game
     @Scheduled(fixedRate = 60 * 1000)
     public void dropDisabledUsersByTime() {
         template.update(
-                DROP_USERS_BY_TIME,
+                "DELETE FROM users WHERE enabled = false AND (SELECT extract(epoch FROM (SELECT CURRENT_TIMESTAMP::timestamp - created::timestamp)) / 60) >= 60;",
                 new MapSqlParameterSource());
     }
 
@@ -47,7 +44,9 @@ public class UserRepository implements UserSqlQueries, DeveloperSqlQueries, Game
         try {
             var user =
                     template.queryForObject(
-                            FIND_BY_USERNAME,
+                            "SELECT id, name, username, email, password, account_non_expired, account_non_locked, credentials_non_expired, enabled, created " +
+                                    "FROM users " +
+                                    "WHERE username = :username;",
                             Map.of("username", username),
                             (rs, i) -> new UserDomain(
                                     rs.getLong("id"),
@@ -65,7 +64,7 @@ public class UserRepository implements UserSqlQueries, DeveloperSqlQueries, Game
                     );
 
             var authorities = template.query(
-                    FIND_AUTHORITY,
+                    "SELECT authority FROM authorities WHERE user_id = :id;",
                     Map.of("id", Objects.requireNonNull(user).getId()),
                     (rs, i) -> new SimpleGrantedAuthority(rs.getString("authority"))
             );
@@ -87,7 +86,7 @@ public class UserRepository implements UserSqlQueries, DeveloperSqlQueries, Game
     public long save(UserDomain domain) {
         var keyHolder = new GeneratedKeyHolder();
         template.update(
-                SAVE_USER,
+                "INSERT INTO users (name, username, password, email) VALUES (:name, :username, :password, :email);",
                 new MapSqlParameterSource(
                         Map.of("name", domain.getName(),
                                 "username", domain.getUsername(),
@@ -97,7 +96,7 @@ public class UserRepository implements UserSqlQueries, DeveloperSqlQueries, Game
         var key = Objects.requireNonNull(keyHolder.getKeys()).get("id");
         for (GrantedAuthority authority : domain.getAuthorities()) {
             template.update(
-                    SAVE_AUTHORITY,
+                    "INSERT INTO authorities (user_id, authority) VALUES (:id, :authority);",
                     Map.of(
                             "id", key,
                             "authority", authority.getAuthority()));
@@ -113,7 +112,7 @@ public class UserRepository implements UserSqlQueries, DeveloperSqlQueries, Game
      */
     public boolean existsByUserName(final String username) {
         var userCount = template.queryForObject(
-                USERNAME_COUNT,
+                "SELECT count(id) FROM users WHERE username = :username;",
                 Map.of("username", username),
                 Integer.class);
 
@@ -131,7 +130,9 @@ public class UserRepository implements UserSqlQueries, DeveloperSqlQueries, Game
         try {
             var user =
                     template.queryForObject(
-                            FIND_USER_BY_ID,
+                            "SELECT id, name, username, email, password, account_non_expired, account_non_locked, credentials_non_expired, enabled, created " +
+                                    "FROM users " +
+                                    "WHERE id = :id;",
                             Map.of("id", id),
                             (rs, i) -> new UserDomain(
                                     rs.getLong("id"),
@@ -149,7 +150,7 @@ public class UserRepository implements UserSqlQueries, DeveloperSqlQueries, Game
                     );
 
             var authorities = template.query(
-                    FIND_AUTHORITY,
+                    "SELECT authority FROM authorities WHERE user_id = :id;",
                     Map.of("id", id),
                     (rs, i) -> new SimpleGrantedAuthority(rs.getString("authority"))
             );
@@ -170,7 +171,7 @@ public class UserRepository implements UserSqlQueries, DeveloperSqlQueries, Game
      */
     public void enableUser(long id) {
         template.update(
-                ENABLE_USER,
+                "UPDATE users SET enabled = true WHERE id = :id;",
                 Map.of("id", id));
     }
 
@@ -180,34 +181,31 @@ public class UserRepository implements UserSqlQueries, DeveloperSqlQueries, Game
      * @param domain объект с данными пользователя
      * @return информация пользователя
      */
-    public Optional<UserProfileResponseDto> getUserInformation(UserDomain domain) {
-        try {
-            var user =
-                    template.queryForObject(
-                            USER_INFORMATION,
-                            Map.of("id", domain.getId()),
-                            (rs, i) -> new UserProfileResponseDto(
-                                    rs.getLong("id"),
-                                    rs.getString("name"),
-                                    rs.getString("username"),
-                                    rs.getString("email"),
-                                    Collections.emptyList(),
-                                    rs.getTimestamp("created").toLocalDateTime().toLocalDate()
-                            ));
+    public UserProfileResponseDto getUserInformation(UserDomain domain) {
+        var user =
+                template.queryForObject(
+                        "SELECT id, name, username, email, created " +
+                                "FROM users " +
+                                "WHERE id = :id;",
+                        Map.of("id", domain.getId()),
+                        (rs, i) -> new UserProfileResponseDto(
+                                rs.getLong("id"),
+                                rs.getString("name"),
+                                rs.getString("username"),
+                                rs.getString("email"),
+                                Collections.emptyList(),
+                                rs.getTimestamp("created").toLocalDateTime().toLocalDate()
+                        ));
 
-            assert user != null;
+        assert user != null;
 
-            var authorities = template.query(
-                    FIND_AUTHORITY,
-                    Map.of("id", domain.getId()),
-                    (rs, i) -> new SimpleGrantedAuthority(rs.getString("authority"))
-            );
-            user.setAuthorities(authorities);
-
-            return Optional.of(user);
-        } catch (EmptyResultDataAccessException e) {
-            return Optional.empty();
-        }
+        var authorities = template.query(
+                "SELECT authority FROM authorities WHERE user_id = :id;",
+                Map.of("id", domain.getId()),
+                (rs, i) -> new SimpleGrantedAuthority(rs.getString("authority"))
+        );
+        user.setAuthorities(authorities);
+        return user;
     }
 
     /**
@@ -220,22 +218,27 @@ public class UserRepository implements UserSqlQueries, DeveloperSqlQueries, Game
     public boolean isGameDeveloper(long gameId,
                                    long userId) {
         var gameCompanyId = template.query(
-                GET_COMPANY_ID_FROM_GAMES,
-                Map.of("id", gameId),
+                "SELECT company_id FROM games WHERE id = :gameId;",
+                Map.of("gameId", gameId),
                 (rs, i) ->
                         rs.getLong("company_id"));
 
         var userCompanyId = template.query(
-                GET_COMPANY_ID_FROM_DEVELOPERS,
-                Map.of("id", userId),
+                "SELECT company_id FROM developers WHERE user_id = :userId;",
+                Map.of("userId", userId),
                 (rs, i) ->
                         rs.getLong("company_id"));
         return gameCompanyId.equals(userCompanyId);
     }
 
+    /**
+     * Добавление роли пользователю.
+     *
+     * @param domain сущность с данными ролт
+     */
     public void addRoleToUsers(AuthorityDomain domain) {
         template.update(
-                ADD_ROLE,
+                "INSERT INTO authorities (user_id, authority) VALUES (:userId, :authority)",
                 Map.of("user_id", domain.getId(),
                         "role", domain.getAuthority()));
     }

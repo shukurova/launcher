@@ -5,6 +5,7 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Repository;
 import ru.itpark.gameslauncher.domain.UserDomain;
 import ru.itpark.gameslauncher.domain.game.GameDomain;
@@ -14,17 +15,12 @@ import ru.itpark.gameslauncher.dto.game.*;
 import ru.itpark.gameslauncher.dto.user.UserGameResponseDto;
 import ru.itpark.gameslauncher.exception.CompanyNotFoundException;
 import ru.itpark.gameslauncher.exception.GameNotFoundException;
-import ru.itpark.gameslauncher.repository.sql.CompanySqlQueries;
-import ru.itpark.gameslauncher.repository.sql.GameSqlQueries;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 @Repository
 @RequiredArgsConstructor
-public class GameRepository implements GameSqlQueries, CompanySqlQueries {
+public class GameRepository {
     private final NamedParameterJdbcTemplate template;
     private final DeveloperRepository developerRepository;
 
@@ -35,7 +31,7 @@ public class GameRepository implements GameSqlQueries, CompanySqlQueries {
      */
     public List<GameCondensedResponseDto> getAllApproved() {
         return template.query(
-                GET_ALL_GAMES,
+                "SELECT id, name, coverage FROM games  WHERE approved = true;",
                 (rs, i) -> new GameCondensedResponseDto(
                         rs.getLong("id"),
                         rs.getString("name"),
@@ -52,7 +48,11 @@ public class GameRepository implements GameSqlQueries, CompanySqlQueries {
     public Optional<GameResponseDto> findApprovedById(long id) {
         try {
             var game = template.queryForObject(
-                    GET_APPROVED_BY_ID,
+                    "SELECT g.id, g.name, g.release_date, g.content, g.coverage, c.name as company_name, g.status, g.genre, g.likes, g.dislikes " +
+                            "FROM games g " +
+                            "JOIN companies c ON g.company_id = c.id " +
+                            "WHERE g.id = :id " +
+                            "AND g.approved = true;",
                     Map.of("id", id),
                     (rs, i) -> new GameResponseDto(
                             rs.getLong("id"),
@@ -81,7 +81,7 @@ public class GameRepository implements GameSqlQueries, CompanySqlQueries {
      */
     public List<GameCondensedResponseDto> getAllNotApproved() {
         return template.query(
-                GET_ALL_NOT_APPROVED_GAMES,
+                "SELECT id, name, coverage FROM games WHERE approved = false AND returned = false;",
                 (rs, i) -> new GameCondensedResponseDto(
                         rs.getLong("id"),
                         rs.getString("name"),
@@ -96,7 +96,7 @@ public class GameRepository implements GameSqlQueries, CompanySqlQueries {
      */
     public List<GameCondensedResponseDto> getAllReturned() {
         return template.query(
-                GET_ALL_RETURNED_GAMES,
+                "SELECT id, name, coverage FROM games WHERE approved = false AND returned = true;",
                 (rs, i) -> new GameCondensedResponseDto(
                         rs.getLong("id"),
                         rs.getString("name"),
@@ -113,7 +113,12 @@ public class GameRepository implements GameSqlQueries, CompanySqlQueries {
     public Optional<NotApprovedGameResponseDto> findNotApprovedById(long id) {
         try {
             var game = template.queryForObject(
-                    GET_NOT_APPROVED_GAME_BY_ID,
+                    "SELECT g.id, g.name, g.release_date, g.content, g.coverage, c.name as company_name, g.status, g.genre " +
+                            "FROM games g " +
+                            "JOIN companies c ON g.company_id = c.id " +
+                            "WHERE g.id = :id " +
+                            "AND g.approved = false " +
+                            "AND g.returned = false;",
                     Map.of("id", id),
                     (rs, i) -> new NotApprovedGameResponseDto(
                             rs.getLong("id"),
@@ -142,7 +147,12 @@ public class GameRepository implements GameSqlQueries, CompanySqlQueries {
     public Optional<NotApprovedGameResponseDto> findReturnedById(long id) {
         try {
             var game = template.queryForObject(
-                    GET_RETURNED_GAME_BY_ID,
+                    "SELECT g.id, g.name, g.release_date, g.content, g.coverage, c.name as company_name, g.status, g.genre " +
+                            "FROM games g " +
+                            "JOIN companies c ON g.company_id = c.id " +
+                            "WHERE g.id = :id " +
+                            "AND g.approved = false " +
+                            "AND g.returned = true;",
                     Map.of("id", id),
                     (rs, i) -> new NotApprovedGameResponseDto(
                             rs.getLong("id"),
@@ -172,7 +182,7 @@ public class GameRepository implements GameSqlQueries, CompanySqlQueries {
         var keyHolder = new GeneratedKeyHolder();
         try {
             template.update(
-                    CREATE_GAME,
+                    "INSERT INTO games (name, release_date, content, coverage, company_id, status, genre) VALUES (:name, :releaseDate, :content, :coverage, :companyId, :status, :genre);",
                     new MapSqlParameterSource(
                             Map.of("name", domain.getName(),
                                     "releaseDate", domain.getReleaseDate(),
@@ -182,6 +192,7 @@ public class GameRepository implements GameSqlQueries, CompanySqlQueries {
                                     "status", domain.getStatus().getIndex(),
                                     "genre", domain.getGenre().getIndex())),
                     keyHolder);
+
             var key = ((Number) Objects.requireNonNull(keyHolder.getKeys()).get("id")).longValue();
             domain.setId(key);
             return Optional.of(domain);
@@ -198,7 +209,7 @@ public class GameRepository implements GameSqlQueries, CompanySqlQueries {
      */
     public boolean checkExistsByName(final String name) {
         var gameCount = template.queryForObject(
-                CHECK_GAME_EXISTS_BY_NAME,
+                "SELECT count(id) FROM games WHERE name = :name;",
                 Map.of("name", name),
                 Integer.class);
 
@@ -213,7 +224,7 @@ public class GameRepository implements GameSqlQueries, CompanySqlQueries {
      */
     public void approveGame(long id) {
         template.update(
-                APPROVE_GAME,
+                "UPDATE games SET approved = true, returned = false WHERE id = :id;",
                 Map.of("id", id));
     }
 
@@ -223,21 +234,32 @@ public class GameRepository implements GameSqlQueries, CompanySqlQueries {
      * @param gameId id игры
      * @return сущность с данными игры
      */
-    public ReturnedGameResponseDto findNotApprovedGameWithCommentById(long gameId) {
-        return template.queryForObject(
-                FIND_NOT_APPROVED_GAME_WITH_COMMENT,
-                Map.of("id", gameId),
-                (rs, i) -> new ReturnedGameResponseDto(
-                        rs.getLong("id"),
-                        rs.getString("name"),
-                        rs.getDate("release_date").toLocalDate(),
-                        rs.getString("content"),
-                        rs.getString("coverage"),
-                        rs.getString("company_name"),
-                        GameStatus.getStatusByIndex(rs.getInt("status")),
-                        GameGenre.getGenreByIndex(rs.getInt("genre")),
-                        rs.getString("comment")
-                ));
+    public Optional<ReturnedGameResponseDto> findNotApprovedGameWithCommentById(long gameId) {
+        try {
+            var game = template.queryForObject(
+                    "SELECT g.id, g.name, g.release_date, g.content, g.coverage, c.name as company_name, g.status, g.genre, rgc.comment " +
+                            "FROM games g " +
+                            "JOIN returned_games_comments rgc ON g.id = rgc.game_id " +
+                            "JOIN companies c ON g.company_id = c.id " +
+                            "AND g.returned = true " +
+                            "AND rgc.game_id = :id;",
+                    Map.of("id", gameId),
+                    (rs, i) -> new ReturnedGameResponseDto(
+                            rs.getLong("id"),
+                            rs.getString("name"),
+                            rs.getDate("release_date").toLocalDate(),
+                            rs.getString("content"),
+                            rs.getString("coverage"),
+                            rs.getString("company_name"),
+                            GameStatus.getStatusByIndex(rs.getInt("status")),
+                            GameGenre.getGenreByIndex(rs.getInt("genre")),
+                            rs.getString("comment")
+                    ));
+
+            return Optional.ofNullable(game);
+        } catch (EmptyResultDataAccessException e) {
+            throw new GameNotFoundException("Game not found!");
+        }
     }
 
     /**
@@ -251,18 +273,20 @@ public class GameRepository implements GameSqlQueries, CompanySqlQueries {
                            String companyName,
                            String comment) {
         var companyId = template.query(
-                GET_APPROVED_COMPANY_BY_ID,
+                "SELECT id FROM companies WHERE name = :name AND approved = true;",
                 Map.of("name", companyName),
                 (rs, i) ->
                         rs.getLong("id"));
 
-        template.update(SAVE_COMMENT_WITH_RETURNED_GAME,
+        template.update(
+                "INSERT INTO returned_games_comments (game_id, company_id, comment) VALUES (:id, :companyId, :comment);",
                 new MapSqlParameterSource(
                         Map.of("id", id,
                                 "companyId", companyId,
                                 "comment", comment)));
 
-        template.update(CHANGE_GAME_STATUS_TO_RETURNED,
+        template.update(
+                "UPDATE games set returned = true where id = :id;",
                 Map.of("id", id));
     }
 
@@ -272,7 +296,8 @@ public class GameRepository implements GameSqlQueries, CompanySqlQueries {
      * @param dto данные, которые нужно перезаписать
      */
     public void editGame(GameEditRequestDto dto) {
-        template.update(EDIT_GAME,
+        template.update(
+                "UPDATE games SET name = :name, release_date = :releaseDate, content = :content, coverage = :coverage, status = :status, genre = :genre, returned = false WHERE id = :id;",
                 Map.of("name", dto.getName(),
                         "releaseDate", dto.getReleaseDate(),
                         "content", dto.getContent(),
@@ -291,7 +316,10 @@ public class GameRepository implements GameSqlQueries, CompanySqlQueries {
     public Optional<UserGameResponseDto> findUserGameByGameId(long id) {
         try {
             var game = template.queryForObject(
-                    FIND_USER_GAME_BY_GAME_ID,
+                    "SELECT g.id, g.name, g.release_date, g.content, g.coverage, c.name as company_name, g.status, g.genre, g.likes, g.dislikes, g.approved, g.returned " +
+                            "FROM games g " +
+                            "JOIN companies c ON g.company_id = c.id " +
+                            "WHERE g.id = :id;",
                     Map.of("id", id),
                     (rs, i) -> new UserGameResponseDto(
                             rs.getLong("id"),
@@ -308,8 +336,7 @@ public class GameRepository implements GameSqlQueries, CompanySqlQueries {
                             rs.getBoolean("returned")
                     ));
 
-            assert game != null;
-            return Optional.of(game);
+            return Optional.ofNullable(game);
         } catch (EmptyResultDataAccessException e) {
             throw new GameNotFoundException("Game not found!");
         }
@@ -324,7 +351,10 @@ public class GameRepository implements GameSqlQueries, CompanySqlQueries {
     public Optional<GameResponseDto> findById(long id) {
         try {
             var game = template.queryForObject(
-                    FIND_GAME_BY_GAME_ID,
+                    "SELECT g.id, g.name, g.release_date, g.content, g.coverage, c.name as company_name, g.status, g.genre, g.likes, g.dislikes " +
+                            "FROM games g " +
+                            "JOIN companies c ON g.company_id = c.id " +
+                            "WHERE g.id = :id;",
                     Map.of("id", id),
                     (rs, i) -> new GameResponseDto(
                             rs.getLong("id"),
@@ -346,30 +376,60 @@ public class GameRepository implements GameSqlQueries, CompanySqlQueries {
         }
     }
 
+    //TODO: додумать как отображать список игр разным пользакам
+    /**
+     * Поиск игр компании, в которой числится пользователь.
+     *
+     * @param domain сущность с данными пользователя
+     * @return список игр пользователя
+     */
+    public List<GameCondensedResponseDto> findUserGames(UserDomain domain) {
+        List<GameCondensedResponseDto> games = new ArrayList<>();
+        var authorities = template.query(
+                "SELECT authority FROM authorities WHERE user_id = :id;",
+                Map.of("id", domain.getId()),
+                (rs, i) -> new SimpleGrantedAuthority(rs.getString("authority"))
+        );
+
+        for (SimpleGrantedAuthority authority : authorities) {
+            if (authority.getAuthority().equals("ROLE_DEVELOPER") & authority.getAuthority().equals("ROLE_USER")) {
+                var company = developerRepository
+                        .getCompanyByUserId(domain.getId())
+                        .orElseThrow(() -> new CompanyNotFoundException("Not found company for this user!"));
+
+                games = template.query(
+                        "SELECT id, name, coverage FROM games WHERE company_id = :companyId;",
+                        Map.of("companyId", company.getId()),
+                        (rs, i) -> new GameCondensedResponseDto(
+                                rs.getLong("id"),
+                                rs.getString("name"),
+                                rs.getString("coverage")
+                        ));
+            } else {
+                    games = findNotApprovedUserGames(domain);
+                }
+            }
+            return games;
+        }
+
     /**
      * Поиск игр пользователя с помощью id пользователя.
      *
      * @param domain сущность с данными пользователя
      * @return список игр пользователя
      */
-    public Optional<List<GameCondensedResponseDto>> findUserGames(UserDomain domain) {
-        try {
-            var company = developerRepository
-                    .getCompanyByUserId(domain.getId())
-                    .orElseThrow(() -> new CompanyNotFoundException("Not found company for this user!"));
-
-            var games = template.query(
-                    FIND_GAME_BY_USER_ID,
-                    Map.of("companyId", company.getId()),
-                    (rs, i) -> new GameCondensedResponseDto(
-                            rs.getLong("id"),
-                            rs.getString("name"),
-                            rs.getString("coverage")
-                    ));
-
-            return Optional.of(games);
-        } catch (EmptyResultDataAccessException e) {
-            throw new GameNotFoundException("Game not found!");
-        }
+    public List<GameCondensedResponseDto> findNotApprovedUserGames(UserDomain domain) {
+        return template.query(
+                "SELECT g.id, g.name, g.coverage " +
+                        "FROM games g " +
+                        "JOIN companies c ON g.company_id = c.id " +
+                        "JOIN users u ON u.id = c.creator_id " +
+                        "WHERE u.id = :userId;",
+                Map.of("userId", domain.getId()),
+                (rs, i) -> new GameCondensedResponseDto(
+                        rs.getLong("id"),
+                        rs.getString("name"),
+                        rs.getString("coverage")
+                ));
     }
 }
