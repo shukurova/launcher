@@ -21,11 +21,11 @@ public class DeveloperRepository {
      * @param userId id пользователя
      * @return данные компании
      */
-    public Optional<CompanyDomain> getCompanyByUserId(long userId) {
+    public Optional<List<CompanyDomain>> getCompanyByUserId(long userId) {
         try {
             var company =
-                    template.queryForObject(
-                            "SELECT id, name, country, content, creation_date, approved, returned FROM companies WHERE id = (SELECT company_id FROM developers WHERE user_id = :userId);",
+                    template.query(
+                            "SELECT id, name, country, content, creation_date, approved, returned, creator_id FROM companies WHERE id IN (SELECT company_id FROM developers WHERE user_id = :userId);",
                             Map.of("userId", userId),
                             (rs, i) -> new CompanyDomain(
                                     rs.getLong("id"),
@@ -34,7 +34,8 @@ public class DeveloperRepository {
                                     rs.getString("content"),
                                     rs.getDate("creation_date").toLocalDate(),
                                     rs.getBoolean("approved"),
-                                    rs.getBoolean("returned")
+                                    rs.getBoolean("returned"),
+                                    rs.getLong("creator_id")
                             )
                     );
             return Optional.ofNullable(company);

@@ -7,8 +7,10 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Repository;
 import ru.itpark.gameslauncher.domain.CompanyDomain;
+import ru.itpark.gameslauncher.domain.UserDomain;
 import ru.itpark.gameslauncher.dto.company.*;
 import ru.itpark.gameslauncher.dto.game.GameCondensedResponseDto;
+import ru.itpark.gameslauncher.dto.user.UserCompanyResponseDto;
 import ru.itpark.gameslauncher.exception.CompanyNotFoundException;
 
 import java.util.*;
@@ -131,12 +133,13 @@ public class CompanyRepository {
         var keyHolder = new GeneratedKeyHolder();
         try {
             template.update(
-                    "INSERT INTO companies (name, country, content, creation_date) VALUES (:name, :country, :content, :creation_date);",
+                    "INSERT INTO companies (name, country, content, creation_date, creator_id) VALUES (:name, :country, :content, :creationDate, :creatorId);",
                     new MapSqlParameterSource(
                             Map.of("name", domain.getName(),
                                     "country", domain.getCountry(),
                                     "content", domain.getContent(),
-                                    "creation_date", domain.getCreationDate())),
+                                    "creationDate", domain.getCreationDate(),
+                                    "creatorId", domain.getCreatorId())),
                     keyHolder);
 
             var key = ((Number) Objects.requireNonNull(keyHolder.getKeys()).get("id")).longValue();
@@ -219,5 +222,45 @@ public class CompanyRepository {
                 (rs, i) -> rs.getLong("id"));
         assert id != null;
         return id;
+    }
+
+    public List<CompanyCondensedResponseDto> getCompanyByUserId(long userId) {
+        return template.query(
+                "SELECT c.id, c.name FROM companies c JOIN developers d ON c.id = d.company_id WHERE d.user_id = :userId;",
+                Map.of("userId", userId),
+                (rs, i) -> new CompanyCondensedResponseDto());
+    }
+
+    public List<CompanyCondensedResponseDto> findCreatedCompaniesByUser(UserDomain domain) {
+        return template.query(
+                "SELECT id, name " +
+                        "FROM companies " +
+                        "WHERE creator_id = :userId;",
+                Map.of("userId", domain.getId()),
+                (rs, i) -> new CompanyCondensedResponseDto(
+                        rs.getLong("id"),
+                        rs.getString("name")
+                ));
+    }
+
+    public Optional<UserCompanyResponseDto> findUserCompanyByCompanyId(long companyId) {
+        try {
+            var company = template.queryForObject(
+                    "SELECT id, name, country, content, creation_date, approved, returned FROM companies WHERE id = :id;",
+                    Map.of("id", companyId),
+                    (rs, i) -> new UserCompanyResponseDto(
+                            rs.getLong("id"),
+                            rs.getString("name"),
+                            rs.getString("country"),
+                            rs.getString("content"),
+                            rs.getDate("creation_date").toLocalDate(),
+                            rs.getBoolean("approved"),
+                            rs.getBoolean("returned")
+                    ));
+
+            return Optional.ofNullable(company);
+        } catch (EmptyResultDataAccessException e) {
+            throw new CompanyNotFoundException("Company not found!");
+        }
     }
 }

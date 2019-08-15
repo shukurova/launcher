@@ -59,19 +59,21 @@ public class GameService {
                 .getCompanyByUserId(user.getId())
                 .orElseThrow(() -> new CompanyNotFoundException("Not found company for this user!"));
 
+        //TODO: додумать логику с несколькими компаниями
         var game = new GameDomain(
                 0L,
                 dto.getName(),
                 dto.getReleaseDate(),
                 dto.getContent(),
                 dto.getCoverage(),
-                company.getId(),
+                company.get(0).getId(),
                 dto.getStatus(),
                 dto.getGenre(),
                 0,
                 0,
                 false,
-                false
+                false,
+                user.getId()
         );
 
         return gameRepository.createGame(game)

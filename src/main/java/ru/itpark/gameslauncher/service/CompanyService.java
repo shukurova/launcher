@@ -63,7 +63,8 @@ public class CompanyService {
                 dto.getContent(),
                 dto.getCreationDate(),
                 false,
-                false
+                false,
+                userDomain.getId()
         );
 
         var companyAfterCreation = companyRepository.createCompany(company)

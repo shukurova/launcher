@@ -242,4 +242,22 @@ public class UserRepository {
                 Map.of("user_id", domain.getId(),
                         "role", domain.getAuthority()));
     }
+
+    public boolean isCompanyDeveloper(long companyId,
+                                      long userId) {
+        var userCompanyId = template.query(
+                "SELECT company_id FROM developers WHERE user_id = :userId;",
+                Map.of("userId", userId),
+                (rs, i) ->
+                        rs.getLong("company_id"));
+
+        boolean result = false;
+        for (Long id : userCompanyId) {
+            if (id.equals(companyId)) {
+                result = true;
+            }
+        }
+
+        return result;
+    }
 }

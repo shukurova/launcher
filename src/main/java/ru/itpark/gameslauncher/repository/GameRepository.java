@@ -7,6 +7,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Repository;
+import ru.itpark.gameslauncher.domain.CompanyDomain;
 import ru.itpark.gameslauncher.domain.UserDomain;
 import ru.itpark.gameslauncher.domain.game.GameDomain;
 import ru.itpark.gameslauncher.domain.game.GameGenre;
@@ -17,6 +18,7 @@ import ru.itpark.gameslauncher.exception.CompanyNotFoundException;
 import ru.itpark.gameslauncher.exception.GameNotFoundException;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
@@ -182,7 +184,7 @@ public class GameRepository {
         var keyHolder = new GeneratedKeyHolder();
         try {
             template.update(
-                    "INSERT INTO games (name, release_date, content, coverage, company_id, status, genre) VALUES (:name, :releaseDate, :content, :coverage, :companyId, :status, :genre);",
+                    "INSERT INTO games (name, release_date, content, coverage, company_id, status, genre, creator_id) VALUES (:name, :releaseDate, :content, :coverage, :companyId, :status, :genre, :creatorId);",
                     new MapSqlParameterSource(
                             Map.of("name", domain.getName(),
                                     "releaseDate", domain.getReleaseDate(),
@@ -190,7 +192,8 @@ public class GameRepository {
                                     "coverage", domain.getCoverage(),
                                     "companyId", domain.getCompanyId(),
                                     "status", domain.getStatus().getIndex(),
-                                    "genre", domain.getGenre().getIndex())),
+                                    "genre", domain.getGenre().getIndex(),
+                                    "creatorId", domain.getCreatorId())),
                     keyHolder);
 
             var key = ((Number) Objects.requireNonNull(keyHolder.getKeys()).get("id")).longValue();
@@ -376,7 +379,7 @@ public class GameRepository {
         }
     }
 
-    //TODO: додумать как отображать список игр разным пользакам
+
     /**
      * Поиск игр компании, в которой числится пользователь.
      *
@@ -384,33 +387,28 @@ public class GameRepository {
      * @return список игр пользователя
      */
     public List<GameCondensedResponseDto> findUserGames(UserDomain domain) {
-        List<GameCondensedResponseDto> games = new ArrayList<>();
-        var authorities = template.query(
-                "SELECT authority FROM authorities WHERE user_id = :id;",
-                Map.of("id", domain.getId()),
-                (rs, i) -> new SimpleGrantedAuthority(rs.getString("authority"))
-        );
-
-        for (SimpleGrantedAuthority authority : authorities) {
-            if (authority.getAuthority().equals("ROLE_DEVELOPER") & authority.getAuthority().equals("ROLE_USER")) {
-                var company = developerRepository
-                        .getCompanyByUserId(domain.getId())
-                        .orElseThrow(() -> new CompanyNotFoundException("Not found company for this user!"));
-
-                games = template.query(
-                        "SELECT id, name, coverage FROM games WHERE company_id = :companyId;",
-                        Map.of("companyId", company.getId()),
-                        (rs, i) -> new GameCondensedResponseDto(
-                                rs.getLong("id"),
-                                rs.getString("name"),
-                                rs.getString("coverage")
-                        ));
-            } else {
-                    games = findNotApprovedUserGames(domain);
-                }
-            }
-            return games;
+        var company = developerRepository
+                .getCompanyByUserId(domain.getId())
+                .orElseThrow(() -> new CompanyNotFoundException("Not found company for this user!"));
+        List<Long> ids = new ArrayList<>();
+        for (CompanyDomain companyDomain : company) {
+            ids.add(companyDomain.getId());
         }
+
+        String companiesId = ids.stream()
+                .map(String::valueOf)
+                .collect(Collectors.joining(","));
+
+        //TODO: понять причину почему запрос не проходит
+        return template.query(
+                "SELECT id, name, coverage FROM games WHERE company_id IN (:companiesId);",
+                Map.of("companiesId", companiesId),
+                (rs, i) -> new GameCondensedResponseDto(
+                        rs.getLong("id"),
+                        rs.getString("name"),
+                        rs.getString("coverage")
+                ));
+    }
 
     /**
      * Поиск игр пользователя с помощью id пользователя.
@@ -418,7 +416,7 @@ public class GameRepository {
      * @param domain сущность с данными пользователя
      * @return список игр пользователя
      */
-    public List<GameCondensedResponseDto> findNotApprovedUserGames(UserDomain domain) {
+    public List<GameCondensedResponseDto> findCreatedGamesByUser(UserDomain domain) {
         return template.query(
                 "SELECT g.id, g.name, g.coverage " +
                         "FROM games g " +

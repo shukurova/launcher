@@ -57,7 +57,8 @@ CREATE TABLE games
     likes        INTEGER          DEFAULT 0,
     dislikes     INTEGER          DEFAULT 0,
     approved     BOOlEAN NOT NULL DEFAULT FALSE,
-    returned     BOOlEAN NOT NULL DEFAULT FALSE
+    returned     BOOlEAN NOT NULL DEFAULT FALSE,
+    creator_id INTEGER NOT NULL REFERENCES users
 );
 
 CREATE TABLE developers

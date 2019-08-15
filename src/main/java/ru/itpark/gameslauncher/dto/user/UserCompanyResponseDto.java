@@ -1,4 +1,4 @@
-package ru.itpark.gameslauncher.domain;
+package ru.itpark.gameslauncher.dto.user;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -9,7 +9,7 @@ import java.time.LocalDate;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class CompanyDomain {
+public class UserCompanyResponseDto {
     private long id;
     private String name;
     private String country;
@@ -17,5 +17,4 @@ public class CompanyDomain {
     private LocalDate creationDate;
     private boolean approved;
     private boolean returned;
-    private long creatorId;
 }

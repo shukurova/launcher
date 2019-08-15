@@ -185,13 +185,46 @@ X-Token: {{auth_token}}
 
 ###
 
-GET http://localhost:8080/api/profile/games/2
+GET http://localhost:8080/api/profile/games/24
 Content-Type: application/json
 X-Token: {{auth_token}}
 
 ###
 
 POST http://localhost:8080/api/profile/games/24/edit
+Content-Type: application/json
+X-Token: {{auth_token}}
+
+{
+  "name": "Test Game Edit From Profile",
+  "releaseDate": "2022-01-22",
+  "content": "Test Game content 2",
+  "coverage": "test-cover.png",
+  "status": "TODO",
+  "genre": "RPG"
+}
+
+###
+
+GET http://localhost:8080/api/profile/companies
+Content-Type: application/json
+X-Token: {{auth_token}}
+
+###
+
+GET http://localhost:8080/api/profile/companies/created-by-me
+Content-Type: application/json
+X-Token: {{auth_token}}
+
+###
+
+GET http://localhost:8080/api/profile/companies/24
+Content-Type: application/json
+X-Token: {{auth_token}}
+
+###
+
+POST http://localhost:8080/api/profile/companies/24/edit
 Content-Type: application/json
 X-Token: {{auth_token}}
 
