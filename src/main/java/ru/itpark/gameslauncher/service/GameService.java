@@ -3,6 +3,7 @@ package ru.itpark.gameslauncher.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.itpark.gameslauncher.domain.CompanyDomain;
 import ru.itpark.gameslauncher.domain.UserDomain;
 import ru.itpark.gameslauncher.domain.game.GameDomain;
 import ru.itpark.gameslauncher.dto.game.*;
@@ -49,24 +50,30 @@ public class GameService {
                 .orElseThrow(() -> new GameNotFoundException("Game not found!"));
     }
 
-    public GameDomain createGame(GameRequestDto dto, UserDomain user) {
+    public GameDomain createGame(GameRequestDto dto,
+                                 UserDomain user) {
         if (gameRepository.checkExistsByName(dto.getName())) {
             throw new GameAlreadyExistsException(
                     String.format("Game with this name %s already exists!", dto.getName()));
         }
 
-        var company = developerRepository
+        var companies = developerRepository
                 .getCompanyByUserId(user.getId())
                 .orElseThrow(() -> new CompanyNotFoundException("Not found company for this user!"));
 
-        //TODO: додумать логику с несколькими компаниями
+        for (CompanyDomain company : companies) {
+            if (!(company.getId() == dto.getCompanyId())) {
+                throw new CompanyNotFoundException("You are not developer in this company!");
+            }
+        }
+
         var game = new GameDomain(
                 0L,
                 dto.getName(),
                 dto.getReleaseDate(),
                 dto.getContent(),
                 dto.getCoverage(),
-                company.get(0).getId(),
+                dto.getCompanyId(),
                 dto.getStatus(),
                 dto.getGenre(),
                 0,

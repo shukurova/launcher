@@ -228,7 +228,9 @@ public class CompanyRepository {
         return template.query(
                 "SELECT c.id, c.name FROM companies c JOIN developers d ON c.id = d.company_id WHERE d.user_id = :userId;",
                 Map.of("userId", userId),
-                (rs, i) -> new CompanyCondensedResponseDto());
+                (rs, i) -> new CompanyCondensedResponseDto(
+                        rs.getLong("id"),
+                        rs.getString("name")));
     }
 
     public List<CompanyCondensedResponseDto> findCreatedCompaniesByUser(UserDomain domain) {
@@ -243,6 +245,7 @@ public class CompanyRepository {
                 ));
     }
 
+    //TODO: добавить коммент, если игра не заапрувлена и вернута админом
     public Optional<UserCompanyResponseDto> findUserCompanyByCompanyId(long companyId) {
         try {
             var company = template.queryForObject(

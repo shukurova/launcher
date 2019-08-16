@@ -351,6 +351,7 @@ public class GameRepository {
      * @param id id игры
      * @return сущность игры с данными
      */
+    //TODO: добавить коммент, если игра не заапрувлена и вернута админом
     public Optional<GameResponseDto> findById(long id) {
         try {
             var game = template.queryForObject(
@@ -395,13 +396,18 @@ public class GameRepository {
             ids.add(companyDomain.getId());
         }
 
+        if (ids.size() == 0) {
+            throw new GameNotFoundException("You dont't have games yet!");
+        }
+
         String companiesId = ids.stream()
                 .map(String::valueOf)
                 .collect(Collectors.joining(","));
 
-        //TODO: понять причину почему запрос не проходит
+        String sql = String.format("SELECT id, name, coverage FROM games WHERE company_id IN (%s);", companiesId);
+
         return template.query(
-                "SELECT id, name, coverage FROM games WHERE company_id IN (:companiesId);",
+                sql,
                 Map.of("companiesId", companiesId),
                 (rs, i) -> new GameCondensedResponseDto(
                         rs.getLong("id"),

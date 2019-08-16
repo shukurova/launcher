@@ -27,7 +27,6 @@ public class UserService {
     private final UserRepository userRepository;
     private final GameRepository gameRepository;
     private final CompanyRepository companyRepository;
-    private final DeveloperRepository developerRepository;
 
     public UserProfileResponseDto getUserInformation(UserDomain domain) {
         return userRepository.getUserInformation(domain);

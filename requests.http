@@ -35,7 +35,7 @@ POST http://localhost:8080/api/authentication
 Content-Type: application/json
 
 {
-  "username": "olya",
+  "username": "kolya",
   "password": "password"
 }
 
@@ -124,6 +124,7 @@ X-Token: {{auth_token}}
   "releaseDate": "2025-01-22",
   "content": "Dreams about game",
   "coverage": "test-cover.png",
+  "companyId": 2,
   "status": "TODO",
   "genre": "ACTION"
 }
@@ -185,7 +186,7 @@ X-Token: {{auth_token}}
 
 ###
 
-GET http://localhost:8080/api/profile/games/24
+GET http://localhost:8080/api/profile/games/3
 Content-Type: application/json
 X-Token: {{auth_token}}
 
@@ -218,7 +219,7 @@ X-Token: {{auth_token}}
 
 ###
 
-GET http://localhost:8080/api/profile/companies/24
+GET http://localhost:8080/api/profile/companies/14
 Content-Type: application/json
 X-Token: {{auth_token}}
 
@@ -244,10 +245,10 @@ Content-Type: application/json
 X-Token: {{auth_token}}
 
 {
-  "name": "Fake Developers",
-  "country": "Russia",
-  "content": "We are not developers",
-  "creationDate": "2019-04-01"
+  "name": "Kolya Developers",
+  "country": "Japan",
+  "content": "We are kolya developers",
+  "creationDate": "2018-04-01"
 }
 
 ###
@@ -285,7 +286,7 @@ client.test("Request executed successfully", function() {
 
 ###
 
-GET http://localhost:8080/api/companies/not-approved/13
+GET http://localhost:8080/api/companies/not-approved/14
 X-Token: {{auth_token}}
 
 > {%
@@ -320,12 +321,12 @@ client.test("Request executed successfully", function() {
 ###
 
 
-POST http://localhost:8080/api/companies/not-approved/13/return
+POST http://localhost:8080/api/companies/not-approved/14/return
 Content-Type: application/json
 X-Token: {{auth_token}}
 
 {
-  "comment": "We are not working with fake developers."
+  "comment": "We are not working with developers like you."
 }
 
 > {%
