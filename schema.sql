@@ -85,6 +85,14 @@ CREATE TABLE return_company_comments
     created    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE medias
+(
+    id      SERIAL PRIMARY KEY,
+    game_id INTEGER NOT NULL REFERENCES games,
+    name    TEXT    NOT NULL,
+    type    TEXT    NOT NULL
+);
+
 CREATE TABLE comments
 (
     id       SERIAL PRIMARY KEY,
@@ -94,14 +102,6 @@ CREATE TABLE comments
     date     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     likes    INTEGER   DEFAULT 0,
     dislikes INTEGER   DEFAULT 0
-);
-
-CREATE TABLE medias
-(
-    id      SERIAL PRIMARY KEY,
-    game_id INTEGER NOT NULL REFERENCES games,
-    path    TEXT    NOT NULL,
-    type    TEXT    NOT NULL -- 'IMAGE', 'VIDEO'
 );
 
 INSERT INTO companies (name, country, content, creation_date)

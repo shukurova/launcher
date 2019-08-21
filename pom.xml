@@ -67,6 +67,11 @@
         <scope>runtime</scope>
         <optional>true</optional>
     </dependency>
+        <dependency>
+            <groupId>org.apache.tika</groupId>
+            <artifactId>tika-parsers</artifactId>
+            <version>1.21</version>
+        </dependency>
     </dependencies>
 
     <build>

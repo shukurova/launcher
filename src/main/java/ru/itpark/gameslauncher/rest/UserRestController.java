@@ -28,16 +28,19 @@ public class UserRestController {
     }
 
     @GetMapping("/games")
+    @PreAuthorize("hasRole('DEVELOPER')")
     public List<GameCondensedResponseDto> findUserGames(@AuthenticationPrincipal UserDomain domain) {
         return userService.findUserGames(domain);
     }
 
     @GetMapping("/games/created-by-me")
+    @PreAuthorize("hasRole('DEVELOPER')")
     public List<GameCondensedResponseDto> findCreatedGamesByUser(@AuthenticationPrincipal UserDomain domain) {
         return userService.findCreatedGamesByUser(domain);
     }
 
     @GetMapping("/games/{id}")
+    @PreAuthorize("hasRole('DEVELOPER')")
     public UserGameResponseDto findUserGameById(@PathVariable long id) {
         return userService.findUserGameById(id);
     }
