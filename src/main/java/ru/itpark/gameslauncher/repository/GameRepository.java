@@ -5,17 +5,17 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Repository;
 import ru.itpark.gameslauncher.domain.CompanyDomain;
 import ru.itpark.gameslauncher.domain.UserDomain;
 import ru.itpark.gameslauncher.domain.game.GameDomain;
-import ru.itpark.gameslauncher.domain.game.GameGenre;
-import ru.itpark.gameslauncher.domain.game.GameStatus;
+import ru.itpark.gameslauncher.enums.GameGenre;
+import ru.itpark.gameslauncher.enums.GameStatus;
 import ru.itpark.gameslauncher.dto.game.*;
 import ru.itpark.gameslauncher.dto.user.UserGameResponseDto;
 import ru.itpark.gameslauncher.exception.CompanyNotFoundException;
 import ru.itpark.gameslauncher.exception.GameNotFoundException;
+import ru.itpark.gameslauncher.service.FileService;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 public class GameRepository {
     private final NamedParameterJdbcTemplate template;
     private final DeveloperRepository developerRepository;
+    private final FileService fileService;
 
     /**
      * Получение списка игр, у которых параметр approved = true.

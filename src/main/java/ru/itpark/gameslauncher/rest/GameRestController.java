@@ -7,7 +7,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import ru.itpark.gameslauncher.domain.UserDomain;
 import ru.itpark.gameslauncher.domain.game.GameDomain;
-import ru.itpark.gameslauncher.domain.upload.UploadDomain;
 import ru.itpark.gameslauncher.dto.game.*;
 import ru.itpark.gameslauncher.service.GameService;
 
@@ -56,9 +55,8 @@ public class GameRestController {
     @PostMapping
     @PreAuthorize("hasRole('DEVELOPER')")
     public GameDomain createGame(@RequestBody GameRequestDto dto,
-                                 @AuthenticationPrincipal UserDomain user,
-                                 @ModelAttribute UploadDomain upload) {
-        return gameService.createGame(dto, user, upload);
+                                 @AuthenticationPrincipal UserDomain user) {
+        return gameService.createGame(dto, user);
     }
 
     @PostMapping("/not-approved/{id}/approve")
@@ -78,7 +76,7 @@ public class GameRestController {
     @PostMapping("/{id}/edit")
     @PreAuthorize("@permissionService.isGameDeveloper(#id, #user.id)")
     public GameResponseDto createUpdateRequest(@PathVariable long id,
-                                    @RequestBody GameRequestDto dto) {
+                                               @RequestBody GameRequestDto dto) {
         return gameService.createUpdateRequest(id, dto);
     }
 }

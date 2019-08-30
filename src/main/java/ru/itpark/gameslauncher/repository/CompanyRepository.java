@@ -19,7 +19,6 @@ import java.util.*;
 @RequiredArgsConstructor
 public class CompanyRepository {
     private final NamedParameterJdbcTemplate template;
-
     /**
      * Получение списка подтверждённых компаний с параметром approved = true.
      *

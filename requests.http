@@ -35,7 +35,7 @@ POST http://localhost:8080/api/authentication
 Content-Type: application/json
 
 {
-  "username": "kolya",
+  "username": "katya",
   "password": "password"
 }
 
@@ -115,15 +115,28 @@ client.test("Request executed successfully", function() {
 
 ###
 
+POST http://localhost:8080/api/images
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+X-Token: {{auth_token}}
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="empty-coverage.png"
+Content-Type: image/png
+
+< ./empty-coverage.png
+--WebAppBoundary--
+
+###
+
 POST http://localhost:8080/api/games
 Content-Type: application/json
 X-Token: {{auth_token}}
 
 {
-  "name": "Dark Souls 4",
+  "name": "Image upload test",
   "releaseDate": "2025-01-22",
-  "content": "Dreams about game",
-  "coverage": "test-cover.png",
+  "content": "Image upload test content",
+  "coverage": "ea0c43e0-006a-42b2-a32c-5ab60965b97d.png",
   "companyId": 2,
   "status": "TODO",
   "genre": "ACTION"

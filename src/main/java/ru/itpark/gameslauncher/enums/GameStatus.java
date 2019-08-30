@@ -1,4 +1,4 @@
-package ru.itpark.gameslauncher.domain.game;
+package ru.itpark.gameslauncher.enums;
 
 public enum GameStatus {
     TODO(0),

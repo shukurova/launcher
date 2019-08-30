@@ -3,8 +3,8 @@ package ru.itpark.gameslauncher.dto.game;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import ru.itpark.gameslauncher.domain.game.GameGenre;
-import ru.itpark.gameslauncher.domain.game.GameStatus;
+import ru.itpark.gameslauncher.enums.GameGenre;
+import ru.itpark.gameslauncher.enums.GameStatus;
 
 import java.time.LocalDate;
 

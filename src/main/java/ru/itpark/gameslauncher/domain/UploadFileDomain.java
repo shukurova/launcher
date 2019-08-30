@@ -1,4 +1,4 @@
-package ru.itpark.gameslauncher.domain.upload;
+package ru.itpark.gameslauncher.domain;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -8,5 +8,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UploadFileDomain {
-  private String name;
+  private String fileId;
 }

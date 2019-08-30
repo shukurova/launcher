@@ -14,7 +14,6 @@ import ru.itpark.gameslauncher.dto.user.UserProfileResponseDto;
 import ru.itpark.gameslauncher.exception.CompanyNotFoundException;
 import ru.itpark.gameslauncher.exception.GameNotFoundException;
 import ru.itpark.gameslauncher.repository.CompanyRepository;
-import ru.itpark.gameslauncher.repository.DeveloperRepository;
 import ru.itpark.gameslauncher.repository.GameRepository;
 import ru.itpark.gameslauncher.repository.UserRepository;
 

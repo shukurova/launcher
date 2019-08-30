@@ -6,7 +6,6 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.itpark.gameslauncher.domain.CompanyDomain;
 import ru.itpark.gameslauncher.domain.UserDomain;
 import ru.itpark.gameslauncher.domain.game.GameDomain;
-import ru.itpark.gameslauncher.domain.upload.UploadDomain;
 import ru.itpark.gameslauncher.dto.game.*;
 import ru.itpark.gameslauncher.exception.*;
 import ru.itpark.gameslauncher.repository.CompanyRepository;
@@ -23,7 +22,6 @@ public class GameService {
     private final DeveloperRepository developerRepository;
     private final CompanyRepository companyRepository;
     private final EmailService emailService;
-    private final FileService fileService;
 
     public List<GameCondensedResponseDto> getAllApproved() {
         return gameRepository.getAllApproved();
@@ -53,8 +51,7 @@ public class GameService {
     }
 
     public GameDomain createGame(GameRequestDto dto,
-                                 UserDomain user,
-                                 UploadDomain upload) {
+                                 UserDomain user) {
         if (gameRepository.checkExistsByName(dto.getName())) {
             throw new GameAlreadyExistsException(
                     String.format("Game with this name %s already exists!", dto.getName()));
@@ -70,14 +67,12 @@ public class GameService {
             }
         }
 
-        var file = fileService.save(upload);
-
         var game = new GameDomain(
                 0L,
                 dto.getName(),
                 dto.getReleaseDate(),
                 dto.getContent(),
-                file.getName(),
+                dto.getCoverage(),
                 dto.getCompanyId(),
                 dto.getStatus(),
                 dto.getGenre(),
