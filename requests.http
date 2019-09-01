@@ -35,7 +35,7 @@ POST http://localhost:8080/api/authentication
 Content-Type: application/json
 
 {
-  "username": "katya",
+  "username": "admin",
   "password": "password"
 }
 
@@ -81,7 +81,7 @@ client.test("Request executed successfully", function() {
 
 ###
 
-GET http://localhost:8080/api/games/not-approved/24
+GET http://localhost:8080/api/games/not-approved/21
 X-Token: {{auth_token}}
 
 > {%
@@ -105,6 +105,17 @@ client.test("Request executed successfully", function() {
 ###
 
 GET http://localhost:8080/api/games/returned
+X-Token: {{auth_token}}
+
+> {%
+client.test("Request executed successfully", function() {
+  client.assert(response.status === 200, "Response status is not 200");
+});
+%}
+
+###
+
+GET http://localhost:8080/api/games/returned/21
 X-Token: {{auth_token}}
 
 > {%

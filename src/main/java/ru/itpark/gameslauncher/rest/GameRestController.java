@@ -7,6 +7,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import ru.itpark.gameslauncher.domain.UserDomain;
 import ru.itpark.gameslauncher.domain.game.GameDomain;
+import ru.itpark.gameslauncher.dto.company.CompanyRequestDto;
 import ru.itpark.gameslauncher.dto.game.*;
 import ru.itpark.gameslauncher.service.GameService;
 
@@ -48,8 +49,8 @@ public class GameRestController {
 
     @GetMapping("/returned/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public NotApprovedGameResponseDto findReturnedById(@PathVariable long id) {
-        return gameService.findReturnedById(id);
+    public ReturnedGameResponseDto findReturnedById(@PathVariable long id) {
+        return gameService.findReturnedGameWithCommentById(id);
     }
 
     @PostMapping
@@ -78,5 +79,14 @@ public class GameRestController {
     public GameResponseDto createUpdateRequest(@PathVariable long id,
                                                @RequestBody GameRequestDto dto) {
         return gameService.createUpdateRequest(id, dto);
+    }
+
+    @PostMapping("/{id}/edit")
+    @PreAuthorize("@permissionService.isGameDeveloper(#id, #user.id)")
+    @ResponseStatus(HttpStatus.OK)
+    public void editCompany(@PathVariable long id,
+                            @RequestBody GameEditRequestDto dto,
+                            @AuthenticationPrincipal UserDomain user) {
+        gameService.editGame(id, dto);
     }
 }

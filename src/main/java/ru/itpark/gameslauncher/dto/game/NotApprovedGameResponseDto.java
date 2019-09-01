@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import ru.itpark.gameslauncher.enums.GameGenre;
 import ru.itpark.gameslauncher.enums.GameStatus;
+import ru.itpark.gameslauncher.enums.RequestStatus;
 
 import java.time.LocalDate;
 
@@ -18,6 +19,7 @@ public class NotApprovedGameResponseDto {
     private String content;
     private String coverage;
     private String companyName;
-    private GameStatus status;
+    private GameStatus gameStatus;
     private GameGenre genre;
+    private RequestStatus requestStatus;
 }

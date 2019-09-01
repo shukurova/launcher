@@ -17,6 +17,6 @@ public class GameEditRequestDto {
     private LocalDate releaseDate;
     private String content;
     private String coverage;
-    private GameStatus status;
+    private GameStatus gameStatus;
     private GameGenre genre;
 }

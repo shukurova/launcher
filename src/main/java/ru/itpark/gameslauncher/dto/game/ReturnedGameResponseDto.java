@@ -18,7 +18,7 @@ public class ReturnedGameResponseDto {
     private String content;
     private String coverage;
     private String companyName;
-    private GameStatus status;
+    private GameStatus gameStatus;
     private GameGenre genre;
     private String comment;
 }

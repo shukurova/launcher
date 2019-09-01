@@ -5,6 +5,7 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 import ru.itpark.gameslauncher.domain.CompanyDomain;
+import ru.itpark.gameslauncher.enums.RequestStatus;
 
 import java.util.List;
 import java.util.Map;
@@ -25,7 +26,7 @@ public class DeveloperRepository {
         try {
             var company =
                     template.query(
-                            "SELECT id, name, country, content, creation_date, approved, returned, creator_id FROM companies WHERE id IN (SELECT company_id FROM developers WHERE user_id = :userId);",
+                            "SELECT id, name, country, content, creation_date, request_status, creator_id FROM companies WHERE id IN (SELECT company_id FROM developers WHERE user_id = :userId);",
                             Map.of("userId", userId),
                             (rs, i) -> new CompanyDomain(
                                     rs.getLong("id"),
@@ -33,12 +34,11 @@ public class DeveloperRepository {
                                     rs.getString("country"),
                                     rs.getString("content"),
                                     rs.getDate("creation_date").toLocalDate(),
-                                    rs.getBoolean("approved"),
-                                    rs.getBoolean("returned"),
-                                    rs.getLong("creator_id")
+                                    rs.getLong("creator_id"),
+                                    RequestStatus.getStatusByIndex(rs.getInt("approved"))
                             )
                     );
-            return Optional.ofNullable(company);
+            return Optional.of(company);
         } catch (
                 EmptyResultDataAccessException e) {
             return Optional.empty();
@@ -59,7 +59,7 @@ public class DeveloperRepository {
                     (rs, i) ->
                             rs.getString("email"));
 
-            return Optional.ofNullable(emails);
+            return Optional.of(emails);
         } catch (
                 EmptyResultDataAccessException e) {
             return Optional.empty();
@@ -80,7 +80,7 @@ public class DeveloperRepository {
                             Map.of("companyId", companyId),
                             (rs, i) -> rs.getLong("user_id"));
 
-            return Optional.ofNullable(userId);
+            return Optional.of(userId);
         } catch (
                 EmptyResultDataAccessException e) {
             return Optional.empty();

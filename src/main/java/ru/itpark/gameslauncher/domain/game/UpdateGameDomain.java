@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import ru.itpark.gameslauncher.enums.GameGenre;
 import ru.itpark.gameslauncher.enums.GameStatus;
+import ru.itpark.gameslauncher.enums.RequestStatus;
 
 import java.time.LocalDate;
 
@@ -21,7 +22,6 @@ public class UpdateGameDomain {
     private long companyId;
     private GameStatus status;
     private GameGenre genre;
-    private boolean approved;
-    private boolean returned;
     private long creatorId;
+    private RequestStatus requestStatus;
 }

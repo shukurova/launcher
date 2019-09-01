@@ -11,6 +11,7 @@ import ru.itpark.gameslauncher.domain.UserDomain;
 import ru.itpark.gameslauncher.dto.company.*;
 import ru.itpark.gameslauncher.dto.game.GameCondensedResponseDto;
 import ru.itpark.gameslauncher.dto.user.UserCompanyResponseDto;
+import ru.itpark.gameslauncher.enums.RequestStatus;
 import ru.itpark.gameslauncher.exception.CompanyNotFoundException;
 
 import java.util.*;
@@ -26,7 +27,7 @@ public class CompanyRepository {
      */
     public List<CompanyCondensedResponseDto> getAllApproved() {
         return template.query(
-                "SELECT id, name, country, content, creation_date FROM companies WHERE approved = true;",
+                "SELECT id, name, country, content, creation_date FROM companies WHERE request_status = 1;",
                 (rs, i) -> new CompanyCondensedResponseDto(
                         rs.getLong("id"),
                         rs.getString("name")
@@ -42,7 +43,7 @@ public class CompanyRepository {
     public Optional<CompanyResponseDto> findApprovedById(long companyId) {
         try {
             var company = template.queryForObject(
-                    "SELECT id, name, country, content, creation_date FROM companies WHERE id = :id AND approved = true;",
+                    "SELECT id, name, country, content, creation_date FROM companies WHERE id = :id AND request_status = 1;",
                     Map.of("id", companyId),
                     (rs, i) -> new CompanyResponseDto(
                             rs.getLong("id"),
@@ -73,7 +74,7 @@ public class CompanyRepository {
 
     public List<CompanyCondensedResponseDto> getAllNotApproved() {
         return template.query(
-                "SELECT id, name FROM companies WHERE approved = false AND returned = false;",
+                "SELECT id, name FROM companies WHERE request_status = 0;",
                 (rs, i) -> new CompanyCondensedResponseDto(
                         rs.getLong("id"),
                         rs.getString("name")
@@ -83,7 +84,7 @@ public class CompanyRepository {
     public Optional<NotApprovedCompanyResponseDto> findNotApprovedById(long companyId) {
         try {
             var company = template.queryForObject(
-                    "SELECT id, name, country, content, creation_date FROM companies WHERE approved = false AND returned = false;",
+                    "SELECT id, name, country, content, creation_date FROM companies WHERE request_status = 0;",
                     Map.of("id", companyId),
                     (rs, i) -> new NotApprovedCompanyResponseDto(
                             rs.getLong("id"),
@@ -101,7 +102,7 @@ public class CompanyRepository {
 
     public List<CompanyCondensedResponseDto> getAllReturned() {
         return template.query(
-                "SELECT id, name FROM companies WHERE approved = false AND returned = true;",
+                "SELECT id, name FROM companies WHERE request_status = 2;",
                 (rs, i) -> new CompanyCondensedResponseDto(
                         rs.getLong("id"),
                         rs.getString("name")
@@ -111,7 +112,7 @@ public class CompanyRepository {
     public Optional<NotApprovedCompanyResponseDto> findReturnedById(long companyId) {
         try {
             var company = template.queryForObject(
-                    "SELECT id, name, country, content, creation_date FROM companies WHERE id = :id AND approved = false AND returned = true;",
+                    "SELECT id, name, country, content, creation_date FROM companies WHERE id = :id AND request_status = 2;",
                     Map.of("id", companyId),
                     (rs, i) -> new NotApprovedCompanyResponseDto(
                             rs.getLong("id"),
@@ -162,17 +163,17 @@ public class CompanyRepository {
 
     public void approveCompany(long companyId) {
         template.update(
-                "UPDATE companies SET approved = true, returned = false WHERE id = :id;",
+                "UPDATE companies SET request_status = 1 WHERE id = :id;",
                 Map.of("id", companyId));
     }
 
-    public Optional<ReturnedCompanyResponseDto> findNotApprovedCompanyWithCommentById(long companyId) {
+    public Optional<ReturnedCompanyResponseDto> findReturnedCompanyWithCommentById(long companyId) {
         try {
             var company = template.queryForObject(
                     "SELECT c.id, c.name, c.country, c.content, c.creation_date, rcc.comment " +
                             "FROM companies c " +
                             "JOIN return_company_comments rcc ON c.id = rcc.company_id " +
-                            "AND c.returned = true " +
+                            "AND c.request_status = 2 " +
                             "AND c.id = :id;",
                     Map.of("id", companyId),
                     (rs, i) -> new ReturnedCompanyResponseDto(
@@ -199,14 +200,14 @@ public class CompanyRepository {
                                 "comment", comment)));
 
         template.update(
-                "UPDATE companies set returned = true where id = :id;",
+                "UPDATE companies set request_status = 2 where id = :id;",
                 Map.of("id", id));
     }
 
     public void editCompany(long companyId,
                             CompanyRequestDto dto) {
         template.update(
-                "UPDATE companies SET name = :name, country = :country, content = :content, creation_date = :creationDate, returned = false WHERE id = :id;",
+                "UPDATE companies SET name = :name, country = :country, content = :content, creation_date = :creationDate, request_status = 1 WHERE id = :id;",
                 Map.of("name", dto.getName(),
                         "country", dto.getCountry(),
                         "content", dto.getContent(),
@@ -248,7 +249,7 @@ public class CompanyRepository {
     public Optional<UserCompanyResponseDto> findUserCompanyByCompanyId(long companyId) {
         try {
             var company = template.queryForObject(
-                    "SELECT id, name, country, content, creation_date, approved, returned FROM companies WHERE id = :id;",
+                    "SELECT id, name, country, content, creation_date, request_status FROM companies WHERE id = :id;",
                     Map.of("id", companyId),
                     (rs, i) -> new UserCompanyResponseDto(
                             rs.getLong("id"),
@@ -256,8 +257,7 @@ public class CompanyRepository {
                             rs.getString("country"),
                             rs.getString("content"),
                             rs.getDate("creation_date").toLocalDate(),
-                            rs.getBoolean("approved"),
-                            rs.getBoolean("returned")
+                            RequestStatus.getStatusByIndex(rs.getInt("approved"))
                     ));
 
             return Optional.ofNullable(company);

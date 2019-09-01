@@ -35,30 +35,28 @@ CREATE TABLE registration_tokens
 CREATE TABLE companies
 (
     id            SERIAL PRIMARY KEY,
-    name          TEXT NOT NULL UNIQUE,
-    country       TEXT NOT NULL,
-    content       TEXT NOT NULL,
-    creation_date DATE NOT NULL,
-    approved     BOOlEAN NOT NULL DEFAULT FALSE,
-    returned     BOOlEAN NOT NULL DEFAULT FALSE,
-    creator_id INTEGER NOT NULL REFERENCES users
+    name          TEXT    NOT NULL UNIQUE,
+    country       TEXT    NOT NULL,
+    content       TEXT    NOT NULL,
+    creation_date DATE    NOT NULL,
+    creator_id    INTEGER NOT NULL REFERENCES users,
+    request_status INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE games
 (
-    id           SERIAL PRIMARY KEY,
-    name         TEXT    NOT NULL UNIQUE,
-    release_date DATE    NOT NULL,
-    content      TEXT    NOT NULL,
-    coverage     TEXT    NOT NULL,
-    company_id   INTEGER NOT NULL REFERENCES companies,
-    status       INTEGER NOT NULL DEFAULT 0,
-    genre        INTEGER NOT NULL,
-    likes        INTEGER          DEFAULT 0,
-    dislikes     INTEGER          DEFAULT 0,
-    approved     BOOlEAN NOT NULL DEFAULT FALSE,
-    returned     BOOlEAN NOT NULL DEFAULT FALSE,
-    creator_id INTEGER NOT NULL REFERENCES users
+    id             SERIAL PRIMARY KEY,
+    name           TEXT    NOT NULL UNIQUE,
+    release_date   DATE    NOT NULL,
+    content        TEXT    NOT NULL,
+    coverage       TEXT    NOT NULL,
+    company_id     INTEGER NOT NULL REFERENCES companies,
+    game_status         INTEGER NOT NULL DEFAULT 0,
+    genre          INTEGER NOT NULL,
+    likes          INTEGER          DEFAULT 0,
+    dislikes       INTEGER          DEFAULT 0,
+    creator_id     INTEGER NOT NULL REFERENCES users,
+    request_status INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE developers

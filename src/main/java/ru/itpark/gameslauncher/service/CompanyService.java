@@ -7,6 +7,7 @@ import ru.itpark.gameslauncher.domain.AuthorityDomain;
 import ru.itpark.gameslauncher.domain.CompanyDomain;
 import ru.itpark.gameslauncher.domain.UserDomain;
 import ru.itpark.gameslauncher.dto.company.*;
+import ru.itpark.gameslauncher.enums.RequestStatus;
 import ru.itpark.gameslauncher.exception.CompanyAlreadyExistsException;
 import ru.itpark.gameslauncher.exception.CompanyNotFoundException;
 import ru.itpark.gameslauncher.exception.CreateException;
@@ -65,9 +66,8 @@ public class CompanyService {
                 dto.getCountry(),
                 dto.getContent(),
                 dto.getCreationDate(),
-                false,
-                false,
-                userDomain.getId()
+                userDomain.getId(),
+                RequestStatus.PENDING
         );
 
         var companyAfterCreation = companyRepository.createCompany(company)
@@ -111,7 +111,7 @@ public class CompanyService {
 //                String.format("Please, check your game record. You need to edit your game.\n %s", comment));
         companyRepository.returnCompany(companyId, dto.getComment());
 
-        return companyRepository.findNotApprovedCompanyWithCommentById(companyId)
+        return companyRepository.findReturnedCompanyWithCommentById(companyId)
                 .orElseThrow(() -> new CompanyNotFoundException("Company not found!"));
     }
 

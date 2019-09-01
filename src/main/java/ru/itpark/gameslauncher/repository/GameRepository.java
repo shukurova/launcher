@@ -9,13 +9,13 @@ import org.springframework.stereotype.Repository;
 import ru.itpark.gameslauncher.domain.CompanyDomain;
 import ru.itpark.gameslauncher.domain.UserDomain;
 import ru.itpark.gameslauncher.domain.game.GameDomain;
-import ru.itpark.gameslauncher.enums.GameGenre;
-import ru.itpark.gameslauncher.enums.GameStatus;
 import ru.itpark.gameslauncher.dto.game.*;
 import ru.itpark.gameslauncher.dto.user.UserGameResponseDto;
+import ru.itpark.gameslauncher.enums.GameGenre;
+import ru.itpark.gameslauncher.enums.GameStatus;
+import ru.itpark.gameslauncher.enums.RequestStatus;
 import ru.itpark.gameslauncher.exception.CompanyNotFoundException;
 import ru.itpark.gameslauncher.exception.GameNotFoundException;
-import ru.itpark.gameslauncher.service.FileService;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -25,7 +25,6 @@ import java.util.stream.Collectors;
 public class GameRepository {
     private final NamedParameterJdbcTemplate template;
     private final DeveloperRepository developerRepository;
-    private final FileService fileService;
 
     /**
      * Получение списка игр, у которых параметр approved = true.
@@ -34,7 +33,7 @@ public class GameRepository {
      */
     public List<GameCondensedResponseDto> getAllApproved() {
         return template.query(
-                "SELECT id, name, coverage FROM games  WHERE approved = true;",
+                "SELECT id, name, coverage FROM games WHERE request_status = 1;",
                 (rs, i) -> new GameCondensedResponseDto(
                         rs.getLong("id"),
                         rs.getString("name"),
@@ -51,11 +50,11 @@ public class GameRepository {
     public Optional<GameResponseDto> findApprovedById(long id) {
         try {
             var game = template.queryForObject(
-                    "SELECT g.id, g.name, g.release_date, g.content, g.coverage, c.name as company_name, g.status, g.genre, g.likes, g.dislikes " +
+                    "SELECT g.id, g.name, g.release_date, g.content, g.coverage, c.name as company_name, g.game_status, g.genre, g.likes, g.dislikes " +
                             "FROM games g " +
                             "JOIN companies c ON g.company_id = c.id " +
                             "WHERE g.id = :id " +
-                            "AND g.approved = true;",
+                            "AND g.request_status = 1;",
                     Map.of("id", id),
                     (rs, i) -> new GameResponseDto(
                             rs.getLong("id"),
@@ -64,7 +63,7 @@ public class GameRepository {
                             rs.getString("content"),
                             rs.getString("coverage"),
                             rs.getString("company_name"),
-                            GameStatus.getStatusByIndex(rs.getInt("status")),
+                            GameStatus.getStatusByIndex(rs.getInt("game_status")),
                             GameGenre.getGenreByIndex(rs.getInt("genre")),
                             rs.getInt("likes"),
                             rs.getInt("dislikes")
@@ -78,13 +77,13 @@ public class GameRepository {
     }
 
     /**
-     * Получение списка неподтвержденных игр, у которых параметры approved = false и returned = true.
+     * Получение списка неподтвержденных игр, у которых параметры request_status = 0.
      *
      * @return список игр
      */
     public List<GameCondensedResponseDto> getAllNotApproved() {
         return template.query(
-                "SELECT id, name, coverage FROM games WHERE approved = false AND returned = false;",
+                "SELECT id, name, coverage FROM games WHERE request_status = 0;",
                 (rs, i) -> new GameCondensedResponseDto(
                         rs.getLong("id"),
                         rs.getString("name"),
@@ -93,13 +92,13 @@ public class GameRepository {
     }
 
     /**
-     * Получение списка возвращенных игр, у которых параметры approved = false и returned = true.
+     * Получение списка возвращенных игр, у которых параметры request_status = 2.
      *
      * @return список игр
      */
     public List<GameCondensedResponseDto> getAllReturned() {
         return template.query(
-                "SELECT id, name, coverage FROM games WHERE approved = false AND returned = true;",
+                "SELECT id, name, coverage FROM games WHERE request_status = 2;",
                 (rs, i) -> new GameCondensedResponseDto(
                         rs.getLong("id"),
                         rs.getString("name"),
@@ -108,7 +107,7 @@ public class GameRepository {
     }
 
     /**
-     * Получение сущности с данными игры по id, у которой параметры approved = false и returned = false.
+     * Получение сущности с данными игры по id, у которой параметры request_status = 2.
      *
      * @param id id игры
      * @return сущность с данными игры
@@ -116,12 +115,11 @@ public class GameRepository {
     public Optional<NotApprovedGameResponseDto> findNotApprovedById(long id) {
         try {
             var game = template.queryForObject(
-                    "SELECT g.id, g.name, g.release_date, g.content, g.coverage, c.name as company_name, g.status, g.genre " +
+                    "SELECT g.id, g.name, g.release_date, g.content, g.coverage, c.name as company_name, g.game_status, g.genre, g.request_status " +
                             "FROM games g " +
                             "JOIN companies c ON g.company_id = c.id " +
                             "WHERE g.id = :id " +
-                            "AND g.approved = false " +
-                            "AND g.returned = false;",
+                            "AND g.request_status = 0;",
                     Map.of("id", id),
                     (rs, i) -> new NotApprovedGameResponseDto(
                             rs.getLong("id"),
@@ -130,43 +128,9 @@ public class GameRepository {
                             rs.getString("content"),
                             rs.getString("coverage"),
                             rs.getString("company_name"),
-                            GameStatus.getStatusByIndex(rs.getInt("status")),
-                            GameGenre.getGenreByIndex(rs.getInt("genre"))
-                    ));
-
-            assert game != null;
-            return Optional.of(game);
-        } catch (EmptyResultDataAccessException e) {
-            return Optional.empty();
-        }
-    }
-
-    /**
-     * Получение сущности с данными игры по id, у которой параметры approved = false и returned = true.
-     *
-     * @param id id игры
-     * @return сущность с данными игры
-     */
-    public Optional<NotApprovedGameResponseDto> findReturnedById(long id) {
-        try {
-            var game = template.queryForObject(
-                    "SELECT g.id, g.name, g.release_date, g.content, g.coverage, c.name as company_name, g.status, g.genre " +
-                            "FROM games g " +
-                            "JOIN companies c ON g.company_id = c.id " +
-                            "WHERE g.id = :id " +
-                            "AND g.approved = false " +
-                            "AND g.returned = true;",
-                    Map.of("id", id),
-                    (rs, i) -> new NotApprovedGameResponseDto(
-                            rs.getLong("id"),
-                            rs.getString("name"),
-                            rs.getDate("release_date").toLocalDate(),
-                            rs.getString("content"),
-                            rs.getString("coverage"),
-                            rs.getString("company_name"),
-                            GameStatus.getStatusByIndex(rs.getInt("status")),
-                            GameGenre.getGenreByIndex(rs.getInt("genre"))
-                    ));
+                            GameStatus.getStatusByIndex(rs.getInt("game_status")),
+                            GameGenre.getGenreByIndex(rs.getInt("genre")),
+                            RequestStatus.getStatusByIndex(rs.getInt("request_status"))));
 
             assert game != null;
             return Optional.of(game);
@@ -185,14 +149,14 @@ public class GameRepository {
         var keyHolder = new GeneratedKeyHolder();
         try {
             template.update(
-                    "INSERT INTO games (name, release_date, content, coverage, company_id, status, genre, creator_id) VALUES (:name, :releaseDate, :content, :coverage, :companyId, :status, :genre, :creatorId);",
+                    "INSERT INTO games (name, release_date, content, coverage, company_id, game_status, genre, creator_id) VALUES (:name, :releaseDate, :content, :coverage, :companyId, :status, :genre, :creatorId);",
                     new MapSqlParameterSource(
                             Map.of("name", domain.getName(),
                                     "releaseDate", domain.getReleaseDate(),
                                     "content", domain.getContent(),
                                     "coverage", domain.getCoverage(),
                                     "companyId", domain.getCompanyId(),
-                                    "status", domain.getStatus().getIndex(),
+                                    "game_status", domain.getGameStatus().getIndex(),
                                     "genre", domain.getGenre().getIndex(),
                                     "creatorId", domain.getCreatorId())),
                     keyHolder);
@@ -222,13 +186,13 @@ public class GameRepository {
     }
 
     /**
-     * Подтверждения записи игры, изменение параметров 'approved' на true и 'returned' на false.
+     * Подтверждения записи игры, изменение параметра request_status = 1.
      *
      * @param id id игры
      */
     public void approveGame(long id) {
         template.update(
-                "UPDATE games SET approved = true, returned = false WHERE id = :id;",
+                "UPDATE games SET request_status = 1 WHERE id = :id;",
                 Map.of("id", id));
     }
 
@@ -238,14 +202,14 @@ public class GameRepository {
      * @param gameId id игры
      * @return сущность с данными игры
      */
-    public Optional<ReturnedGameResponseDto> findNotApprovedGameWithCommentById(long gameId) {
+    public Optional<ReturnedGameResponseDto> findReturnedGameWithCommentById(long gameId) {
         try {
             var game = template.queryForObject(
-                    "SELECT g.id, g.name, g.release_date, g.content, g.coverage, c.name as company_name, g.status, g.genre, rgc.comment " +
+                    "SELECT g.id, g.name, g.release_date, g.content, g.coverage, c.name as company_name, g.game_status, g.genre, rgc.comment " +
                             "FROM games g " +
                             "JOIN returned_games_comments rgc ON g.id = rgc.game_id " +
                             "JOIN companies c ON g.company_id = c.id " +
-                            "AND g.returned = true " +
+                            "AND g.request_status = 2 " +
                             "AND rgc.game_id = :id;",
                     Map.of("id", gameId),
                     (rs, i) -> new ReturnedGameResponseDto(
@@ -255,7 +219,7 @@ public class GameRepository {
                             rs.getString("content"),
                             rs.getString("coverage"),
                             rs.getString("company_name"),
-                            GameStatus.getStatusByIndex(rs.getInt("status")),
+                            GameStatus.getStatusByIndex(rs.getInt("game_status")),
                             GameGenre.getGenreByIndex(rs.getInt("genre")),
                             rs.getString("comment")
                     ));
@@ -277,7 +241,7 @@ public class GameRepository {
                            String companyName,
                            String comment) {
         var companyId = template.query(
-                "SELECT id FROM companies WHERE name = :name AND approved = true;",
+                "SELECT id FROM companies WHERE name = :name AND request_status = 1;",
                 Map.of("name", companyName),
                 (rs, i) ->
                         rs.getLong("id"));
@@ -290,25 +254,8 @@ public class GameRepository {
                                 "comment", comment)));
 
         template.update(
-                "UPDATE games set returned = true where id = :id;",
+                "UPDATE games set request_status = 2 where id = :id;",
                 Map.of("id", id));
-    }
-
-    /**
-     * Обновление информации игры.
-     *
-     * @param dto данные, которые нужно перезаписать
-     */
-    public void editGame(GameEditRequestDto dto) {
-        template.update(
-                "UPDATE games SET name = :name, release_date = :releaseDate, content = :content, coverage = :coverage, status = :status, genre = :genre, returned = false WHERE id = :id;",
-                Map.of("name", dto.getName(),
-                        "releaseDate", dto.getReleaseDate(),
-                        "content", dto.getContent(),
-                        "coverage", dto.getCoverage(),
-                        "status", dto.getStatus().getIndex(),
-                        "genre", dto.getGenre().getIndex(),
-                        "id", dto.getId()));
     }
 
     /**
@@ -320,7 +267,7 @@ public class GameRepository {
     public Optional<UserGameResponseDto> findUserGameByGameId(long id) {
         try {
             var game = template.queryForObject(
-                    "SELECT g.id, g.name, g.release_date, g.content, g.coverage, c.name as company_name, g.status, g.genre, g.likes, g.dislikes, g.approved, g.returned " +
+                    "SELECT g.id, g.name, g.release_date, g.content, g.coverage, c.name as company_name, g.game_status, g.genre, g.likes, g.dislikes, g.request_status = 1 " +
                             "FROM games g " +
                             "JOIN companies c ON g.company_id = c.id " +
                             "WHERE g.id = :id;",
@@ -332,12 +279,11 @@ public class GameRepository {
                             rs.getString("content"),
                             rs.getString("coverage"),
                             rs.getString("company_name"),
-                            GameStatus.getStatusByIndex(rs.getInt("status")),
+                            GameStatus.getStatusByIndex(rs.getInt("game_status")),
                             GameGenre.getGenreByIndex(rs.getInt("genre")),
                             rs.getInt("likes"),
                             rs.getInt("dislikes"),
-                            rs.getBoolean("approved"),
-                            rs.getBoolean("returned")
+                            RequestStatus.getStatusByIndex(rs.getInt("approved"))
                     ));
 
             return Optional.ofNullable(game);
@@ -352,11 +298,10 @@ public class GameRepository {
      * @param id id игры
      * @return сущность игры с данными
      */
-    //TODO: добавить коммент, если игра не заапрувлена и вернута админом
     public Optional<GameResponseDto> findById(long id) {
         try {
             var game = template.queryForObject(
-                    "SELECT g.id, g.name, g.release_date, g.content, g.coverage, c.name as company_name, g.status, g.genre, g.likes, g.dislikes " +
+                    "SELECT g.id, g.name, g.release_date, g.content, g.coverage, c.name as company_name, g.game_status, g.genre, g.likes, g.dislikes " +
                             "FROM games g " +
                             "JOIN companies c ON g.company_id = c.id " +
                             "WHERE g.id = :id;",
@@ -368,7 +313,7 @@ public class GameRepository {
                             rs.getString("content"),
                             rs.getString("coverage"),
                             rs.getString("company_name"),
-                            GameStatus.getStatusByIndex(rs.getInt("status")),
+                            GameStatus.getStatusByIndex(rs.getInt("game_status")),
                             GameGenre.getGenreByIndex(rs.getInt("genre")),
                             rs.getInt("likes"),
                             rs.getInt("dislikes")
@@ -436,5 +381,22 @@ public class GameRepository {
                         rs.getString("name"),
                         rs.getString("coverage")
                 ));
+    }
+
+    /**
+     * Обновление информации игры.
+     *
+     * @param dto данные, которые нужно перезаписать
+     */
+    public void editGame(GameEditRequestDto dto) {
+        template.update(
+                "UPDATE games SET name = :name, release_date = :releaseDate, content = :content, coverage = :coverage, game_status = :status, genre = :genre, request_status = 1 WHERE id = :id;",
+                Map.of("name", dto.getName(),
+                        "releaseDate", dto.getReleaseDate(),
+                        "content", dto.getContent(),
+                        "coverage", dto.getCoverage(),
+                        "game_status", dto.getGameStatus().getIndex(),
+                        "genre", dto.getGenre().getIndex(),
+                        "id", dto.getId()));
     }
 }

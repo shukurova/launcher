@@ -3,6 +3,7 @@ package ru.itpark.gameslauncher.dto.user;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import ru.itpark.gameslauncher.enums.RequestStatus;
 
 import java.time.LocalDate;
 
@@ -15,6 +16,5 @@ public class UserCompanyResponseDto {
     private String country;
     private String content;
     private LocalDate creationDate;
-    private boolean approved;
-    private boolean returned;
+    private RequestStatus requestStatus;
 }

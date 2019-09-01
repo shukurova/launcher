@@ -17,6 +17,6 @@ public class GameRequestDto {
     private String content;
     private String coverage;
     private long companyId;
-    private GameStatus status;
+    private GameStatus gameStatus;
     private GameGenre genre;
 }

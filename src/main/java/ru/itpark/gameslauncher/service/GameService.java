@@ -6,7 +6,9 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.itpark.gameslauncher.domain.CompanyDomain;
 import ru.itpark.gameslauncher.domain.UserDomain;
 import ru.itpark.gameslauncher.domain.game.GameDomain;
+import ru.itpark.gameslauncher.dto.company.CompanyRequestDto;
 import ru.itpark.gameslauncher.dto.game.*;
+import ru.itpark.gameslauncher.enums.RequestStatus;
 import ru.itpark.gameslauncher.exception.*;
 import ru.itpark.gameslauncher.repository.CompanyRepository;
 import ru.itpark.gameslauncher.repository.DeveloperRepository;
@@ -45,11 +47,6 @@ public class GameService {
         return gameRepository.getAllReturned();
     }
 
-    public NotApprovedGameResponseDto findReturnedById(long id) {
-        return gameRepository.findReturnedById(id)
-                .orElseThrow(() -> new GameNotFoundException("Game not found!"));
-    }
-
     public GameDomain createGame(GameRequestDto dto,
                                  UserDomain user) {
         if (gameRepository.checkExistsByName(dto.getName())) {
@@ -74,13 +71,12 @@ public class GameService {
                 dto.getContent(),
                 dto.getCoverage(),
                 dto.getCompanyId(),
-                dto.getStatus(),
+                dto.getGameStatus(),
                 dto.getGenre(),
                 0,
                 0,
-                false,
-                false,
-                user.getId()
+                user.getId(),
+                RequestStatus.PENDING
         );
 
         return gameRepository.createGame(game)
@@ -107,7 +103,7 @@ public class GameService {
 //                String.format("Please, check your game record. You need to edit your game.\n %s", comment));
         gameRepository.returnGame(id, game.getCompanyName(), dto.getComment());
 
-        return gameRepository.findNotApprovedGameWithCommentById(id)
+        return gameRepository.findReturnedGameWithCommentById(id)
                 .orElseThrow(() -> new GameNotFoundException("Users games not found!"));
     }
 
@@ -124,7 +120,7 @@ public class GameService {
                 dto.getReleaseDate(),
                 dto.getContent(),
                 dto.getCoverage(),
-                dto.getStatus(),
+                dto.getGameStatus(),
                 dto.getGenre()
         );
 
@@ -132,5 +128,15 @@ public class GameService {
 
         return gameRepository.findById(game.getId())
                 .orElseThrow(() -> new GameNotFoundException("Game not found!"));
+    }
+
+    public ReturnedGameResponseDto findReturnedGameWithCommentById(long id) {
+        return gameRepository.findReturnedGameWithCommentById(id)
+                .orElseThrow(() -> new GameNotFoundException("Users games not found!"));
+    }
+
+    //TODO: додумать обновление игры
+    public void editGame(long id, GameEditRequestDto dto) {
+        gameRepository.editGame(id, dto);
     }
 }
