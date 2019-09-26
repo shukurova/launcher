@@ -7,7 +7,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import ru.itpark.gameslauncher.domain.UserDomain;
 import ru.itpark.gameslauncher.domain.game.GameDomain;
-import ru.itpark.gameslauncher.dto.company.CompanyRequestDto;
 import ru.itpark.gameslauncher.dto.game.*;
 import ru.itpark.gameslauncher.service.GameService;
 
@@ -77,16 +76,16 @@ public class GameRestController {
     @PostMapping("/{id}/edit")
     @PreAuthorize("@permissionService.isGameDeveloper(#id, #user.id)")
     public GameResponseDto createUpdateRequest(@PathVariable long id,
-                                               @RequestBody GameRequestDto dto) {
+                                               @RequestBody GameRequestDto dto,
+                                               @AuthenticationPrincipal UserDomain user) {
         return gameService.createUpdateRequest(id, dto);
     }
 
-    @PostMapping("/{id}/edit")
-    @PreAuthorize("@permissionService.isGameDeveloper(#id, #user.id)")
+    @PostMapping("/edit-tasks/{id}/approve")
+    @PreAuthorize("hasRole('ADMIN')")
     @ResponseStatus(HttpStatus.OK)
-    public void editCompany(@PathVariable long id,
-                            @RequestBody GameEditRequestDto dto,
-                            @AuthenticationPrincipal UserDomain user) {
-        gameService.editGame(id, dto);
+    public void approveEditGame(@PathVariable long id,
+                                @RequestBody GameEditRequestDto dto) {
+        gameService.approveEditGame(id, dto);
     }
 }

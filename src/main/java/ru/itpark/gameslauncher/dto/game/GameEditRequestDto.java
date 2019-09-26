@@ -13,6 +13,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class GameEditRequestDto {
     private long id;
+    private long gameId;
     private String name;
     private LocalDate releaseDate;
     private String content;

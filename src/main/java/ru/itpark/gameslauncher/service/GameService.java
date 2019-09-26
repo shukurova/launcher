@@ -109,12 +109,14 @@ public class GameService {
 
     public GameResponseDto createUpdateRequest(long id,
                                                GameRequestDto dto) {
-        if (gameRepository.checkExistsByName(dto.getName())) {
+        String gameName = gameRepository.getGameNameById(id);
+        if (!gameName.equals(dto.getName()) | gameRepository.checkExistsByName(dto.getName())) {
             throw new GameAlreadyExistsException(
                     String.format("Game with this name %s already exists!", dto.getName()));
         }
 
         var game = new GameEditRequestDto(
+                0,
                 id,
                 dto.getName(),
                 dto.getReleaseDate(),
@@ -135,8 +137,7 @@ public class GameService {
                 .orElseThrow(() -> new GameNotFoundException("Users games not found!"));
     }
 
-    //TODO: додумать обновление игры
-    public void editGame(long id, GameEditRequestDto dto) {
+    public void approveEditGame(long id, GameEditRequestDto dto) {
         gameRepository.editGame(id, dto);
     }
 }

@@ -399,4 +399,19 @@ public class GameRepository {
                         "genre", dto.getGenre().getIndex(),
                         "id", dto.getId()));
     }
+
+    /**
+     * Получение названия игры по её id.
+     *
+     * @return название игры
+     */
+    public String getGameNameById(long id) {
+        return template.queryForObject("SELECT g.id, g.name, g.coverage " +
+                        "FROM games g " +
+                        "JOIN companies c ON g.company_id = c.id " +
+                        "JOIN users u ON u.id = c.creator_id " +
+                        "WHERE u.id = :id;",
+                Map.of("userId", id),
+                (rs, i) -> rs.getString("name"));
+    }
 }
