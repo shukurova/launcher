@@ -51,7 +51,7 @@ CREATE TABLE games
     content        TEXT    NOT NULL,
     coverage       TEXT    NOT NULL,
     company_id     INTEGER NOT NULL REFERENCES companies,
-    game_status         INTEGER NOT NULL DEFAULT 0,
+    game_status    INTEGER NOT NULL DEFAULT 0,
     genre          INTEGER NOT NULL,
     likes          INTEGER          DEFAULT 0,
     dislikes       INTEGER          DEFAULT 0,
