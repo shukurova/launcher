@@ -98,7 +98,7 @@ CREATE TABLE comments
     game_id  INTEGER NOT NULL REFERENCES games,
     content  TEXT    NOT NULL,
     date     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    likes    INTEGER   DEFAULT 3,
+    likes    INTEGER   DEFAULT 4,
     dislikes INTEGER   DEFAULT 0
 );
 
